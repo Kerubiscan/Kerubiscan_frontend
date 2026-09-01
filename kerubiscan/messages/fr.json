@@ -1,0 +1,183 @@
+{
+  "Navigation": {
+    "dashboard": "Tableau de bord",
+    "scans": "Scans",
+    "assets": "Actifs",
+    "vulnerabilities": "Vulnérabilités",
+    "reports": "Rapports",
+    "scheduling": "Planification",
+    "policies": "Politiques",
+    "secrets": "Secrets",
+    "users": "Utilisateurs",
+    "settings": "Paramètres",
+    "audit": "Audit"
+  },
+  "Scanner": {
+    "statusTitle": "STATUT DU SCANNER",
+    "operational": "Opérationnel",
+    "scansInProgress": "Scans en cours",
+    "scheduledScans": "Scans planifiés",
+    "lastScan": "Dernier scan",
+    "ago15m": "Il y a 15 min"
+  },
+  "Topbar": {
+    "dashboard": "Tableau de bord",
+    "admin": "admin"
+  },
+  "Login": {
+    "title": "Anticipez. Analysez.",
+    "titleHighlight": "Sécurisez.",
+    "subtitle": "KERUBISCAN vous aide à détecter, analyser et prioriser les vulnérabilités de votre infrastructure pour renforcer votre posture de sécurité.",
+    "feature1Title": "Détection avancée",
+    "feature1Desc": "Scannez en profondeur vos systèmes et applications.",
+    "feature2Title": "Analyses détaillées",
+    "feature2Desc": "Obtenez des rapports clairs et exploitables.",
+    "feature3Title": "Alertes intelligentes",
+    "feature3Desc": "Soyez notifié des risques critiques en temps réel.",
+    "feature4Title": "Sécurité renforcée",
+    "feature4Desc": "Réduisez votre surface d'attaque efficacement.",
+    "copyright": "© 2024 KERUBISCAN. Tous droits réservés.",
+    "formTitle": "Connexion",
+    "formSubtitle": "Accédez à votre tableau de bord KERUBISCAN",
+    "usernameLabel": "Nom d'utilisateur ou email",
+    "usernamePlaceholder": "Entrez votre nom d'utilisateur ou email",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié ?",
+    "signIn": "Se connecter",
+    "or": "ou",
+    "sso": "Se connecter avec SSO",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "contactAdmin": "Contactez l'administrateur"
+  },
+  "Pages": {
+    "scans": {
+      "title": "Scans",
+      "description": "Gérez et lancez vos scans de vulnérabilités.",
+      "actions": "Actions",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "rerun": "Relancer",
+      "networkZone": "Zone Réseau",
+      "scannerEngine": "Moteur de Scan",
+      "newScan": "Nouveau Scan",
+      "customZonePlaceholder": "Zone personnalisée (ex. Bureau Principal)"
+    },
+    "assets": {
+      "title": "Actifs",
+      "description": "Inventaire de votre infrastructure informatique."
+    },
+    "vulnerabilities": {
+      "title": "Vulnérabilités",
+      "description": "Vue détaillée de toutes les failles détectées."
+    },
+    "reports": {
+      "title": "Rapports",
+      "description": "Exportez et consultez vos rapports exécutifs."
+    },
+    "scheduling": {
+      "title": "Planification",
+      "description": "Automatisez vos campagnes de scan."
+    },
+    "policies": {
+      "title": "Politiques",
+      "description": "Configurez vos standards de sécurité."
+    },
+    "settings": {
+      "title": "Paramètres",
+      "description": "Configuration de l'application."
+    },
+    "audit": {
+      "title": "Journal d'audit",
+      "description": "Traçabilité de toutes les actions système."
+    }
+  },
+  "Dashboard": {
+    "stats": {
+      "critical": "CRITIQUES",
+      "criticalSub": "Vulnérabilités critiques",
+      "high": "ÉLEVÉES",
+      "highSub": "Vulnérabilités élevées",
+      "medium": "MOYENNES",
+      "mediumSub": "Vulnérabilités moyennes",
+      "low": "FAIBLES",
+      "lowSub": "Vulnérabilités faibles",
+      "info": "INFO",
+      "infoSub": "Vulnérabilités informatives"
+    },
+    "charts": {
+      "distribution": "RÉPARTITION DES VULNÉRABILITÉS",
+      "overTime": "VULNÉRABILITÉS DANS LE TEMPS"
+    },
+    "latestScan": {
+      "title": "DERNIER SCAN",
+      "name": "Nom",
+      "nameVal": "Scan Réseau Interne",
+      "target": "Cible",
+      "date": "Date",
+      "status": "Statut",
+      "statusVal": "Terminé",
+      "vulnerabilities": "Vulnérabilités",
+      "viewReport": "Voir le rapport"
+    },
+    "assets": {
+      "title": "ACTIFS PAR OS",
+      "others": "Autres"
+    },
+    "vulnerabilities": {
+      "title": "Dernières Vulnérabilités Détectées",
+      "severity": "Sévérité",
+      "name": "Nom",
+      "target": "Cible",
+      "service": "Service",
+      "port": "Port",
+      "detectedOn": "Détectée Le",
+      "viewAll": "Voir toutes les vulnérabilités",
+      "severities": {
+        "critical": "CRITIQUE",
+        "high": "ÉLEVÉE",
+        "medium": "MOYENNE",
+        "low": "FAIBLE",
+        "info": "INFO"
+      }
+    },
+    "scheduledScans": {
+      "title": "Scans Planifiés",
+      "manage": "Gérer les planifications",
+      "scanDmz": "Scan DMZ",
+      "scanDmzTime": "Tous les jours à 02:00",
+      "scanServers": "Scan Serveurs",
+      "scanServersTime": "Tous les dimanches à 01:00",
+      "scanEndpoints": "Scan Postes",
+      "scanEndpointsTime": "Tous les samedis à 03:00"
+    }
+  },
+  "Gateway": {
+    "welcome": "Bienvenue Administrateur",
+    "subtitle": "Où souhaitez-vous aller aujourd'hui ?",
+    "dashboardTitle": "Tableau de bord",
+    "dashboardDesc": "Voir les scans et rapports de vulnérabilités",
+    "adminTitle": "Gérer les utilisateurs et rôles",
+    "adminDesc": "Configurer les accès et les permissions"
+  },
+  "AdminUsers": {
+    "title": "Gérer les utilisateurs",
+    "createUser": "Créer un utilisateur",
+    "username": "Nom d'utilisateur",
+    "email": "Email",
+    "status": "Statut",
+    "actions": "Actions",
+    "editRoles": "Modifier les rôles",
+    "noUsers": "Aucun utilisateur trouvé. Assurez-vous d'avoir le rôle Admin.",
+    "createNewUser": "Créer un nouvel utilisateur",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "password": "Mot de passe",
+    "initialRole": "Rôle initial",
+    "none": "Aucun",
+    "cancel": "Annuler",
+    "assignRole": "Attribuer un rôle",
+    "selectRole": "Sélectionner un rôle"
+  }
+}

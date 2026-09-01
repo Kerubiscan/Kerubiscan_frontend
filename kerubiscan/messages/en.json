@@ -1,0 +1,183 @@
+{
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "scans": "Scans",
+    "assets": "Assets",
+    "vulnerabilities": "Vulnerabilities",
+    "reports": "Reports",
+    "scheduling": "Scheduling",
+    "policies": "Policies",
+    "secrets": "Secrets",
+    "users": "Users",
+    "settings": "Settings",
+    "audit": "Audit"
+  },
+  "Scanner": {
+    "statusTitle": "SCANNER STATUS",
+    "operational": "Operational",
+    "scansInProgress": "Scans in progress",
+    "scheduledScans": "Scheduled scans",
+    "lastScan": "Last scan",
+    "ago15m": "15 min ago"
+  },
+  "Topbar": {
+    "dashboard": "Dashboard",
+    "admin": "admin"
+  },
+  "Login": {
+    "title": "Anticipate. Analyze.",
+    "titleHighlight": "Secure.",
+    "subtitle": "KERUBISCAN helps you detect, analyze, and prioritize vulnerabilities in your infrastructure to strengthen your security posture.",
+    "feature1Title": "Advanced detection",
+    "feature1Desc": "Deeply scan your systems and applications.",
+    "feature2Title": "Detailed analysis",
+    "feature2Desc": "Get clear and actionable reports.",
+    "feature3Title": "Smart alerts",
+    "feature3Desc": "Be notified of critical risks in real-time.",
+    "feature4Title": "Strengthened security",
+    "feature4Desc": "Effectively reduce your attack surface.",
+    "copyright": "© 2024 KERUBISCAN. All rights reserved.",
+    "formTitle": "Login",
+    "formSubtitle": "Access your KERUBISCAN dashboard",
+    "usernameLabel": "Username or email",
+    "usernamePlaceholder": "Enter your username or email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign in",
+    "or": "or",
+    "sso": "Sign in with SSO",
+    "noAccount": "Don't have an account?",
+    "contactAdmin": "Contact the administrator"
+  },
+  "Pages": {
+    "scans": {
+      "title": "Scans",
+      "description": "Manage and launch your vulnerability scans.",
+      "actions": "Actions",
+      "delete": "Delete",
+      "edit": "Edit",
+      "rerun": "Rerun",
+      "networkZone": "Network Zone",
+      "scannerEngine": "Scanner Engine",
+      "newScan": "New Scan",
+      "customZonePlaceholder": "Custom Zone (e.g. Main Office)"
+    },
+    "assets": {
+      "title": "Assets",
+      "description": "Inventory of your IT infrastructure."
+    },
+    "vulnerabilities": {
+      "title": "Vulnerabilities",
+      "description": "Detailed view of all detected flaws."
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Export and consult your executive reports."
+    },
+    "scheduling": {
+      "title": "Scheduling",
+      "description": "Automate your scan campaigns."
+    },
+    "policies": {
+      "title": "Policies",
+      "description": "Configure your security standards."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Application configuration."
+    },
+    "audit": {
+      "title": "Audit Logs",
+      "description": "Traceability of all system actions."
+    }
+  },
+  "Dashboard": {
+    "stats": {
+      "critical": "CRITICAL",
+      "criticalSub": "Critical vulnerabilities",
+      "high": "HIGH",
+      "highSub": "High vulnerabilities",
+      "medium": "MEDIUM",
+      "mediumSub": "Medium vulnerabilities",
+      "low": "LOW",
+      "lowSub": "Low vulnerabilities",
+      "info": "INFO",
+      "infoSub": "Informational vulnerabilities"
+    },
+    "charts": {
+      "distribution": "Vulnerability Distribution",
+      "overTime": "Vulnerabilities Over Time"
+    },
+    "latestScan": {
+      "title": "Latest Scan",
+      "name": "Name",
+      "nameVal": "Internal Network Scan",
+      "target": "Target",
+      "date": "Date",
+      "status": "Status",
+      "statusVal": "Completed",
+      "vulnerabilities": "Vulnerabilities",
+      "viewReport": "View report"
+    },
+    "assets": {
+      "title": "Assets By OS",
+      "others": "Others"
+    },
+    "vulnerabilities": {
+      "title": "Latest Detected Vulnerabilities",
+      "severity": "Severity",
+      "name": "Name",
+      "target": "Target",
+      "service": "Service",
+      "port": "Port",
+      "detectedOn": "Detected On",
+      "viewAll": "View all vulnerabilities",
+      "severities": {
+        "critical": "CRITICAL",
+        "high": "HIGH",
+        "medium": "MEDIUM",
+        "low": "LOW",
+        "info": "INFO"
+      }
+    },
+    "scheduledScans": {
+      "title": "Scheduled Scans",
+      "manage": "Manage schedules",
+      "scanDmz": "DMZ Scan",
+      "scanDmzTime": "Every day at 02:00",
+      "scanServers": "Servers Scan",
+      "scanServersTime": "Every Sunday at 01:00",
+      "scanEndpoints": "Endpoints Scan",
+      "scanEndpointsTime": "Every Saturday at 03:00"
+    }
+  },
+  "Gateway": {
+    "welcome": "Welcome Admin",
+    "subtitle": "Where would you like to go today?",
+    "dashboardTitle": "Frontend Dashboard",
+    "dashboardDesc": "View vulnerability scans and reports",
+    "adminTitle": "Manage Users & Roles",
+    "adminDesc": "Configure access and user permissions"
+  },
+  "AdminUsers": {
+    "title": "Manage Users",
+    "createUser": "Create User",
+    "username": "Username",
+    "email": "Email",
+    "status": "Status",
+    "actions": "Actions",
+    "editRoles": "Edit Roles",
+    "noUsers": "No users found. Ensure you have the Admin role.",
+    "createNewUser": "Create New User",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "password": "Password",
+    "initialRole": "Initial Role",
+    "none": "None",
+    "cancel": "Cancel",
+    "assignRole": "Assign Role",
+    "selectRole": "Select Role"
+  }
+}

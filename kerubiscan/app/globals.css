@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  /* Core colors */
+  --bg-base: #040906; /* Very dark, almost black for main background */
+  --bg-surface: #0a1711; /* Slightly lighter for cards */
+  --bg-surface-hover: #0e2017; /* For hover states on cards/inputs */
+  
+  --primary: #12a138; /* The main green color used for branding/buttons */
+  --primary-hover: #108d32;
+  
+  --border: #162a1e; /* Subtle borders for cards */
+  --border-focus: #1c3d2a;
+  
+  /* Text */
+  --text-main: #ffffff;
+  --text-muted: #9ca3af;
+  
+  /* Status Colors (From the dashboard) */
+  --status-critical: #ef4444; /* Red */
+  --status-high: #f97316; /* Orange */
+  --status-medium: #eab308; /* Yellow */
+  --status-low: #3b82f6; /* Blue */
+  --status-info: #22c55e; /* Green */
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-main);
+  
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-surface-hover: var(--bg-surface-hover);
+  
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  
+  --color-border: var(--border);
+  --color-border-focus: var(--border-focus);
+  
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  
+  --color-status-critical: var(--status-critical);
+  --color-status-high: var(--status-high);
+  --color-status-medium: var(--status-medium);
+  --color-status-low: var(--status-low);
+  --color-status-info: var(--status-info);
+  
+  --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-main);
+  font-family: Arial, Helvetica, sans-serif; /* Fallback */
+}
+
+/* Custom scrollbar to match dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
