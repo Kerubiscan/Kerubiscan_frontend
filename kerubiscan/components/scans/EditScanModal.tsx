@@ -3,8 +3,8 @@ import { X, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface Scan {
-  id: number;
-  company_id: number;
+  id: string;
+  company_id: string;
   name: string;
   target: string;
   network_zone: string | null;

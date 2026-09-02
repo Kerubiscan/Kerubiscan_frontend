@@ -28,23 +28,23 @@ export default function AuditPage() {
 
   const columns = [
     { 
-      header: "Timestamp", 
+      header: t("colDate"), 
       accessor: (row: any) => new Date(row.timestamp).toLocaleString(), 
       className: "font-mono text-sm whitespace-nowrap" 
     },
     { 
-      header: "User", 
+      header: t("colUser"), 
       accessor: (row: any) => row.username || row.user_id, 
       className: "font-medium" 
     },
-    { header: "Action", accessor: "action" as const },
+    { header: t("colAction"), accessor: "action" as const },
     { 
-      header: "Resource", 
+      header: t("colResource"), 
       accessor: (row: any) => `${row.resource_type} (${row.resource_id})`,
       className: "text-text-muted" 
     },
     { 
-      header: "Details", 
+      header: t("colDetails"), 
       accessor: (row: any) => JSON.stringify(row.details || {}),
       className: "text-text-muted truncate max-w-xs" 
     },
@@ -58,7 +58,7 @@ export default function AuditPage() {
         action={
           <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-border hover:bg-surface-hover text-white rounded-lg text-sm font-medium transition-colors">
             <Download className="w-4 h-4" />
-            Export Logs
+            {t("exportLogs")}
           </button>
         }
       />
@@ -66,8 +66,8 @@ export default function AuditPage() {
       <div className="bg-status-warning/10 border border-status-warning/20 rounded-lg p-4 mb-6 flex items-start gap-3">
         <ShieldAlert className="w-5 h-5 text-status-warning shrink-0 mt-0.5" />
         <div>
-          <h4 className="text-sm font-medium text-status-warning mb-1">Immutable Audit Trail</h4>
-          <p className="text-xs text-text-muted">These logs are read-only and cryptographically signed. They cannot be modified or deleted by system administrators.</p>
+          <h4 className="text-sm font-medium text-status-warning mb-1">{t("immutableTitle")}</h4>
+          <p className="text-xs text-text-muted">{t("immutableDesc")}</p>
         </div>
       </div>
 

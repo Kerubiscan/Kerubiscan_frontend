@@ -4,17 +4,31 @@ import React, { useState, useEffect } from "react";
 import { Menu, HelpCircle, Bell, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "../LanguageSwitcher";
-import { Link } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 import { fetchApi } from "@/lib/api";
 import { signOut } from "next-auth/react";
 
 export function Topbar() {
   const t = useTranslations("Topbar");
+  const tNav = useTranslations("Navigation");
+  const pathname = usePathname();
 
   const [username, setUsername] = useState<string>(t("admin"));
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotifMenuOpen, setIsNotifMenuOpen] = useState(false);
+
+  // Determine current page title based on pathname
+  let pageTitle = tNav("dashboard");
+  if (pathname.includes("/dashboard/scans")) pageTitle = tNav("scans");
+  else if (pathname.includes("/dashboard/assets")) pageTitle = tNav("assets");
+  else if (pathname.includes("/dashboard/vulnerabilities")) pageTitle = tNav("vulnerabilities");
+  else if (pathname.includes("/dashboard/reports")) pageTitle = tNav("reports");
+  else if (pathname.includes("/dashboard/scheduling")) pageTitle = tNav("scheduling");
+  else if (pathname.includes("/dashboard/policies")) pageTitle = tNav("policies");
+  else if (pathname.includes("/dashboard/users")) pageTitle = tNav("users");
+  else if (pathname.includes("/dashboard/settings")) pageTitle = tNav("settings");
+  else if (pathname.includes("/dashboard/audit")) pageTitle = tNav("audit");
 
   useEffect(() => {
     async function loadTopbarData() {
@@ -68,7 +82,7 @@ export function Topbar() {
         <button className="text-text-muted hover:text-white transition-colors">
           <Menu className="w-6 h-6" />
         </button>
-        <h1 className="text-xl font-semibold">{t("dashboard")}</h1>
+        <h1 className="text-xl font-semibold">{pageTitle}</h1>
       </div>
       
       <div className="flex items-center gap-6">

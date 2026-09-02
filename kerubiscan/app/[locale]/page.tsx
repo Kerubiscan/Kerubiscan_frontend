@@ -9,7 +9,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const { locale } = await params;
   const session = await getServerSession(authOptions);
   
-  if (!session) {
+  if (!session || (session as any).error === "RefreshAccessTokenError") {
     redirect({ href: "/login", locale });
   }
 

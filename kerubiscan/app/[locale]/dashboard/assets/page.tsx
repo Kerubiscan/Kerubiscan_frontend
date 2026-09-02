@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Plus, ChevronDown, X, Eye, Pencil, Trash2, Loader2, ScanSearch } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
@@ -15,14 +16,15 @@ export default function AssetsPage() {
   const [criticalityFilter, setCriticalityFilter] = useState("All");
   const [companyFilter, setCompanyFilter] = useState("All");
   const [zoneFilter, setZoneFilter] = useState("All");
-  const [envFilter, setEnvFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isCriticalityDropdownOpen, setIsCriticalityDropdownOpen] = useState(false);
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
-  const [isEnvDropdownOpen, setIsEnvDropdownOpen] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const [isEngineDropdownOpen, setIsEngineDropdownOpen] = useState(false);
+  const [isDiscoveryEngineDropdownOpen, setIsDiscoveryEngineDropdownOpen] = useState(false);
 
   const [assetsData, setAssetsData] = useState<any[]>([]);
   const [companiesData, setCompaniesData] = useState<any[]>([]);
@@ -142,7 +144,7 @@ export default function AssetsPage() {
     }
   };
 
-  const handleDeleteAsset = async (id: number) => {
+  const handleDeleteAsset = async (id: string) => {
     if (!confirm("Are you sure you want to delete this asset?")) return;
     try {
       await fetchApi(`/assets/${id}`, { method: "DELETE" });
@@ -185,11 +187,11 @@ export default function AssetsPage() {
   };
 
   const columns = [
-    { header: "Hostname", accessor: "name" as const, className: "font-medium" },
-    { header: "IP Address", accessor: "ip_address" as const, className: "text-text-muted" },
-    { header: "OS", accessor: (row: any) => row.operating_system || "-", className: "" },
+    { header: t("hostnameCol"), accessor: "name" as const, className: "font-medium" },
+    { header: t("ipAddressCol"), accessor: "ip_address" as const, className: "text-text-muted" },
+    { header: t("osCol"), accessor: (row: any) => row.operating_system || "-", className: "" },
     { 
-      header: "Company", 
+      header: t("companyCol"), 
       accessor: (row: any) => {
         if (!row.company_id) return "-";
         const c = companiesData.find(c => c.id === row.company_id);
@@ -198,18 +200,21 @@ export default function AssetsPage() {
       className: "text-text-muted" 
     },
     { 
-      header: "Criticality", 
+      header: t("criticalityCol"), 
       accessor: (row: any) => {
         let variant = "info";
-        if (row.criticality === "Critical") variant = "critical";
-        if (row.criticality === "High") variant = "high";
-        if (row.criticality === "Medium") variant = "medium";
-        if (row.criticality === "Low") variant = "low";
-        return <StatusBadge status={variant as any} label={row.criticality || "Unassigned"} />;
+        let label = t("critUnassigned");
+        
+        if (row.criticality === "Critical") { variant = "critical"; label = t("critCritical"); }
+        if (row.criticality === "High") { variant = "high"; label = t("critHigh"); }
+        if (row.criticality === "Medium") { variant = "medium"; label = t("critMedium"); }
+        if (row.criticality === "Low") { variant = "low"; label = t("critLow"); }
+        
+        return <StatusBadge status={variant as any} label={label} />;
       }
     },
     {
-      header: "Actions",
+      header: t("actionsCol"),
       accessor: (row: any) => (
         <div className="flex items-center gap-1">
           <button 
@@ -268,18 +273,50 @@ export default function AssetsPage() {
 
       const matchCriticality = criticalityFilter === "All" || item.criticality === criticalityFilter;
       const matchCompany = companyFilter === "All" || itemCompanyName === companyFilter;
-      const matchZone = zoneFilter === "All" || item.network_zone === zoneFilter;
-      const matchEnv = envFilter === "All" || item.environment === envFilter;
+      let matchZone = true;
+      if (zoneFilter !== "All") {
+        const [filterSubnet, filterZone] = zoneFilter.split('|');
+        const prefix = filterSubnet.replace(".0/24", "");
+        matchZone = !!item.ip_address?.startsWith(prefix) && (item.network_zone === filterZone || (!item.network_zone && filterZone === "Unassigned"));
+      }
+
+      const matchDate = !dateFilter || (item.created_at && new Date(item.created_at).toISOString().split('T')[0] === dateFilter);
       const matchType = typeFilter === "All" || item.asset_type === typeFilter;
-      return matchCriticality && matchCompany && matchZone && matchEnv && matchType;
+      return matchCriticality && matchCompany && matchZone && matchDate && matchType;
     });
-  }, [assetsData, criticalityFilter, companyFilter, zoneFilter, envFilter, typeFilter, companiesData]);
+  }, [assetsData, criticalityFilter, companyFilter, zoneFilter, dateFilter, typeFilter, companiesData]);
 
   const companiesList = ["All", ...companiesData.map(c => c.name)];
   const criticalities = ["All", "Critical", "High", "Medium", "Low", "Unassigned"];
-  const zones = ["All", "DMZ", "Internal", "Cloud", "Gateway"];
-  const environments = ["All", "Production", "Staging", "Development"];
+  
+  const dynamicSubnets = useMemo(() => {
+    const map = new Map<string, string>();
+    assetsData.forEach(item => {
+      if (item.ip_address) {
+        const parts = item.ip_address.split('.');
+        if (parts.length === 4) {
+          const prefix = `${parts[0]}.${parts[1]}.${parts[2]}`;
+          const subnet = `${prefix}.0/24`;
+          const zone = item.network_zone || "Unassigned";
+          const val = `${subnet}|${zone}`;
+          const label = `${subnet} (${zone})`;
+          map.set(val, label);
+        }
+      }
+    });
+    return Array.from(map.entries());
+  }, [assetsData]);
+
   const assetTypes = ["All", "Server", "Workstation", "Network", "Mobile"];
+  const zones = ["All", "Internal", "External", "DMZ", "Cloud", "Unassigned"];
+  const environments = ["All", "Production", "Staging", "Development", "Testing", "Unassigned"];
+
+  const engineOptions = [
+    { value: "OPENVAS", label: "OpenVAS" },
+    { value: "NMAP", label: "Nmap" },
+    { value: "NUCLEI", label: "Nuclei" },
+    { value: "NESSUS", label: "Nessus" }
+  ];
 
   return (
     <div className="pb-6">
@@ -288,16 +325,42 @@ export default function AssetsPage() {
         description={t("description")} 
         action={
           <div className="flex items-center gap-3">
-            <select 
-              value={vulnEngine} 
-              onChange={e => setVulnEngine(e.target.value)}
-              className="bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none"
+            <div 
+              className="relative" 
+              tabIndex={0} 
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setIsEngineDropdownOpen(false);
+                }
+              }}
             >
-              <option value="OPENVAS">OpenVAS</option>
-              <option value="NMAP">Nmap</option>
-              <option value="NUCLEI">Nuclei</option>
-              <option value="NESSUS">Nessus</option>
-            </select>
+              <button
+                onClick={() => setIsEngineDropdownOpen(!isEngineDropdownOpen)}
+                className="flex items-center justify-between px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[140px]"
+              >
+                <span className="truncate pr-2">
+                  {engineOptions.find(o => o.value === vulnEngine)?.label || vulnEngine}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isEngineDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isEngineDropdownOpen && (
+                <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {engineOptions.map(o => (
+                    <button
+                      key={o.value}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors truncate ${vulnEngine === o.value ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                      onClick={() => {
+                        setVulnEngine(o.value);
+                        setIsEngineDropdownOpen(false);
+                      }}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {selectedAssetIds.size > 0 && (
               <button 
                 onClick={() => handleScanAssets()} 
@@ -309,7 +372,7 @@ export default function AssetsPage() {
             )}
             <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors">
               <Plus className="w-4 h-4" />
-              Add Asset
+              {t("addAssetButton")}
             </button>
           </div>
         }
@@ -317,7 +380,7 @@ export default function AssetsPage() {
       
       <div className="mb-6 flex flex-wrap items-center gap-6">
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Company:</label>
+          <label className="text-sm text-text-muted font-medium">{t("companyLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -332,7 +395,7 @@ export default function AssetsPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[200px] w-[200px]"
             >
               <span className="truncate pr-2">
-                {companyFilter === "All" ? "All Companies" : companyFilter}
+                {companyFilter === "All" ? t("allCompanies") : companyFilter}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -357,7 +420,7 @@ export default function AssetsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Criticality:</label>
+          <label className="text-sm text-text-muted font-medium">{t("criticalityLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -372,7 +435,7 @@ export default function AssetsPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {criticalityFilter === "All" ? "All Criticalities" : criticalityFilter}
+                {criticalityFilter === "All" ? t("allCriticalities") : t(`crit${criticalityFilter}` as any)}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isCriticalityDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -388,7 +451,7 @@ export default function AssetsPage() {
                       setIsCriticalityDropdownOpen(false);
                     }}
                   >
-                    {opt === "All" ? "All Criticalities" : opt}
+                    {opt === "All" ? t("allCriticalities") : t(`crit${opt}` as any)}
                   </button>
                 ))}
               </div>
@@ -397,7 +460,7 @@ export default function AssetsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Network Zone:</label>
+          <label className="text-sm text-text-muted font-medium">{t("networkZoneLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -412,23 +475,32 @@ export default function AssetsPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {zoneFilter === "All" ? "All Zones" : zoneFilter}
+                {zoneFilter === "All" ? t("allZones") : dynamicSubnets.find(([v]) => v === zoneFilter)?.[1] || zoneFilter}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isZoneDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isZoneDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                {zones.map(opt => (
+                <button
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${zoneFilter === "All" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                  onClick={() => {
+                    setZoneFilter("All");
+                    setIsZoneDropdownOpen(false);
+                  }}
+                >
+                  {t("allZones")}
+                </button>
+                {dynamicSubnets.map(([val, label]) => (
                   <button
-                    key={opt}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${zoneFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    key={val}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${zoneFilter === val ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
                     onClick={() => {
-                      setZoneFilter(opt);
+                      setZoneFilter(val);
                       setIsZoneDropdownOpen(false);
                     }}
                   >
-                    {opt === "All" ? "All Zones" : opt}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -437,47 +509,16 @@ export default function AssetsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Environment:</label>
-          <div 
-            className="relative" 
-            tabIndex={0} 
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setIsEnvDropdownOpen(false);
-              }
-            }}
-          >
-            <button
-              onClick={() => setIsEnvDropdownOpen(!isEnvDropdownOpen)}
-              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
-            >
-              <span className="truncate pr-2">
-                {envFilter === "All" ? "All Environments" : envFilter}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isEnvDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {isEnvDropdownOpen && (
-              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                {environments.map(opt => (
-                  <button
-                    key={opt}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${envFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
-                    onClick={() => {
-                      setEnvFilter(opt);
-                      setIsEnvDropdownOpen(false);
-                    }}
-                  >
-                    {opt === "All" ? "All Environments" : opt}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <label className="text-sm text-text-muted font-medium">{t("dateLabel")}</label>
+          <DatePicker 
+            value={dateFilter}
+            onChange={(date) => setDateFilter(date)}
+            placeholder="Select date"
+          />
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Asset Type:</label>
+          <label className="text-sm text-text-muted font-medium">{t("assetTypeLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -492,7 +533,7 @@ export default function AssetsPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {typeFilter === "All" ? "All Types" : typeFilter}
+                {typeFilter === "All" ? t("allTypes") : typeFilter}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -508,7 +549,7 @@ export default function AssetsPage() {
                       setIsTypeDropdownOpen(false);
                     }}
                   >
-                    {opt === "All" ? "All Types" : opt}
+                    {opt === "All" ? t("allTypes") : opt}
                   </button>
                 ))}
               </div>
@@ -529,6 +570,7 @@ export default function AssetsPage() {
           enableSelection={true}
           selectedIds={selectedAssetIds}
           onSelectionChange={setSelectedAssetIds}
+          emptyMessage={t("noData")}
         />
       )}
 
@@ -622,10 +664,44 @@ export default function AssetsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Scanner Engine</label>
-                    <select value={discoveryEngine} onChange={e => setDiscoveryEngine(e.target.value)} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      <option value="OPENVAS">OpenVAS</option>
-                      <option value="NMAP">Nmap</option>
-                    </select>
+                    <div 
+                      className="relative" 
+                      tabIndex={0} 
+                      onBlur={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                          setIsDiscoveryEngineDropdownOpen(false);
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setIsDiscoveryEngineDropdownOpen(!isDiscoveryEngineDropdownOpen)}
+                        className="flex items-center justify-between px-3 py-2 w-full bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors"
+                      >
+                        <span className="truncate pr-2">
+                          {engineOptions.find(o => o.value === discoveryEngine)?.label || discoveryEngine}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isDiscoveryEngineDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isDiscoveryEngineDropdownOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {engineOptions.filter(o => ["OPENVAS", "NMAP"].includes(o.value)).map(o => (
+                            <button
+                              type="button"
+                              key={o.value}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors truncate ${discoveryEngine === o.value ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                              onClick={() => {
+                                setDiscoveryEngine(o.value);
+                                setIsDiscoveryEngineDropdownOpen(false);
+                              }}
+                            >
+                              {o.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

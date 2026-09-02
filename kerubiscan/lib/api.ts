@@ -42,12 +42,14 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
             const { signOut } = await import("next-auth/react");
             await signOut({ redirect: false }); // Clear NextAuth cookie
             
-            // If we got a Keycloak logout URL, go there, otherwise go straight to login
-            if (data.url && data.url.includes("logout")) {
-              window.location.replace(data.url);
-            } else {
-              window.location.replace("/fr/login");
-            }
+            // Give NextAuth a tiny bit of time to delete the cookie before redirecting
+            setTimeout(() => {
+              if (data.url && data.url.includes("logout")) {
+                window.location.replace(data.url);
+              } else {
+                window.location.replace("/fr/login");
+              }
+            }, 300);
             return new Promise(() => {}) as any;
           }
         } catch (e) {
@@ -59,7 +61,9 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
       if (typeof window !== "undefined") {
           const { signOut } = await import("next-auth/react");
           await signOut({ redirect: false });
-          window.location.replace("/fr/login");
+          setTimeout(() => {
+            window.location.replace("/fr/login");
+          }, 300);
       }
       return new Promise(() => {}) as any;
     }

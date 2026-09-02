@@ -9,6 +9,7 @@ import { fetchApi } from "@/lib/api";
 
 export default function PoliciesPage() {
   const t = useTranslations("Pages.policies");
+  const common = useTranslations("Pages.scheduling"); // to reuse company strings if needed
   
   const [companyFilter, setCompanyFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -85,17 +86,26 @@ export default function PoliciesPage() {
     }
   };
 
-  const getCompanyName = (id: number) => {
+  const getCompanyName = (id: string) => {
     if (!id) return "-";
     const c = companiesData.find(c => c.id === id);
     return c ? c.name : `Company ${id}`;
   };
 
+  const getTypeTranslation = (type: string) => {
+    switch (type) {
+      case "Compliance": return t("typeCompliance");
+      case "Vulnerability": return t("typeVulnerability");
+      case "Audit": return t("typeAudit");
+      default: return type;
+    }
+  };
+
   const columns = [
-    { header: "Policy Name", accessor: "name" as const, className: "font-medium" },
-    { header: "Scan Type", accessor: "scan_type" as const },
+    { header: t("colPolicyName"), accessor: "name" as const, className: "font-medium" },
+    { header: t("colType"), accessor: "scan_type" as const },
     { 
-      header: "Company", 
+      header: common("colCompany"), 
       accessor: (row: any) => getCompanyName(row.company_id), 
       className: "text-text-muted" 
     },
@@ -106,12 +116,12 @@ export default function PoliciesPage() {
     },
     { header: "Author", accessor: "author" as const, className: "text-text-muted" },
     {
-      header: "Actions",
+      header: t("colActions"),
       accessor: (row: any) => (
         <button 
           onClick={(e) => { e.stopPropagation(); setSelectedPolicy(row); setIsViewModalOpen(true); }}
           className="p-1 text-text-muted hover:text-primary transition-colors"
-          title="View Details"
+          title={t("colActions")}
         >
           <Eye className="w-4 h-4" />
         </button>
@@ -139,14 +149,14 @@ export default function PoliciesPage() {
         action={
           <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors">
             <ShieldPlus className="w-4 h-4" />
-            Create Policy
+            {t("newPolicy")}
           </button>
         }
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-6">
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Company:</label>
+          <label className="text-sm text-text-muted font-medium">{common("companyLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -161,7 +171,7 @@ export default function PoliciesPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[200px] w-[200px]"
             >
               <span className="truncate pr-2">
-                {companyFilter === "All" ? "All Companies" : companyFilter}
+                {companyFilter === "All" ? common("allCompanies") : companyFilter}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -177,7 +187,7 @@ export default function PoliciesPage() {
                       setIsCompanyDropdownOpen(false);
                     }}
                   >
-                    {c}
+                    {c === "All" ? common("allCompanies") : c}
                   </button>
                 ))}
               </div>
@@ -186,7 +196,7 @@ export default function PoliciesPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Scan Type:</label>
+          <label className="text-sm text-text-muted font-medium">{t("colType")}:</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -201,7 +211,7 @@ export default function PoliciesPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {typeFilter === "All" ? "All Types" : typeFilter}
+                {typeFilter === "All" ? "All Types" : getTypeTranslation(typeFilter)}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -217,7 +227,7 @@ export default function PoliciesPage() {
                       setIsTypeDropdownOpen(false);
                     }}
                   >
-                    {opt}
+                    {opt === "All" ? "All Types" : getTypeTranslation(opt)}
                   </button>
                 ))}
               </div>
@@ -243,19 +253,19 @@ export default function PoliciesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface border border-border rounded-xl w-full max-w-lg shadow-2xl flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-border/50">
-              <h3 className="font-semibold text-lg">Create New Policy</h3>
+              <h3 className="font-semibold text-lg">{t("createPolicyTitle")}</h3>
               <button onClick={() => setIsAddModalOpen(false)} className="text-text-muted hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddPolicy} className="p-5 flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-muted mb-1.5">Policy Name</label>
+                <label className="block text-sm font-medium text-text-muted mb-1.5">{t("policyNameLabel")}</label>
                 <input required value={newPolicy.name} onChange={e => setNewPolicy({...newPolicy, name: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder="e.g. Default Full Scan" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-1.5">Scan Type</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{t("policyTypeLabel")}</label>
                   <select value={newPolicy.scan_type} onChange={e => setNewPolicy({...newPolicy, scan_type: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
                     <option value="Full and fast">Full and fast</option>
                     <option value="Web App">Web App</option>
@@ -264,9 +274,9 @@ export default function PoliciesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-1.5">Company</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{common("colCompany")}</label>
                   <select required value={newPolicy.company_id} onChange={e => setNewPolicy({...newPolicy, company_id: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="">Select a company</option>
+                    <option value="">{common("allCompanies")}</option>
                     {companiesData.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -299,9 +309,9 @@ export default function PoliciesPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-base rounded-lg transition-colors">Cancel</button>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-base rounded-lg transition-colors">{t("cancel")}</button>
                 <button type="submit" className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                  <ShieldPlus className="w-4 h-4" /> Save Policy
+                  <ShieldPlus className="w-4 h-4" /> {t("savePolicy")}
                 </button>
               </div>
             </form>
@@ -314,7 +324,7 @@ export default function PoliciesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsViewModalOpen(false)}>
           <div className="bg-surface h-full w-full max-w-md shadow-2xl flex flex-col animate-in slide-in-from-right-full duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b border-border/50 bg-base/50">
-              <h3 className="font-semibold text-xl">Policy Details</h3>
+              <h3 className="font-semibold text-xl">{t("policyDetailsTitle")}</h3>
               <button onClick={() => setIsViewModalOpen(false)} className="text-text-muted hover:text-white transition-colors bg-surface p-1.5 rounded-md">
                 <X className="w-5 h-5" />
               </button>
@@ -325,11 +335,11 @@ export default function PoliciesPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-base p-3 rounded-lg border border-border/50">
-                  <p className="text-xs text-text-muted mb-1">Scan Type</p>
+                  <p className="text-xs text-text-muted mb-1">{t("colType")}</p>
                   <p className="font-medium text-sm">{selectedPolicy.scan_type}</p>
                 </div>
                 <div className="bg-base p-3 rounded-lg border border-border/50">
-                  <p className="text-xs text-text-muted mb-1">Company</p>
+                  <p className="text-xs text-text-muted mb-1">{common("colCompany")}</p>
                   <p className="font-medium text-sm">{getCompanyName(selectedPolicy.company_id)}</p>
                 </div>
                 <div className="bg-base p-3 rounded-lg border border-border/50">
@@ -369,7 +379,7 @@ export default function PoliciesPage() {
             
             <div className="p-6 border-t border-border/50 bg-base/50">
               <button onClick={() => setIsViewModalOpen(false)} className="w-full py-2.5 bg-surface hover:bg-surface-hover border border-border text-white rounded-lg text-sm font-medium transition-colors">
-                Close
+                {t("close")}
               </button>
             </div>
           </div>

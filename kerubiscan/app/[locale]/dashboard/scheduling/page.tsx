@@ -109,38 +109,56 @@ export default function SchedulingPage() {
     }
   };
 
-  const getCompanyName = (id: number) => {
+  const getCompanyName = (id: string) => {
     if (!id) return "-";
     const c = companiesData.find(c => c.id === id);
     return c ? c.name : `Company ${id}`;
   };
 
+  const getStatusTranslation = (status: string) => {
+    switch (status) {
+      case "Active": return t("statusActive");
+      case "Paused": return t("statusPaused");
+      case "Disabled": return t("statusDisabled");
+      default: return status;
+    }
+  };
+
+  const getFrequencyTranslation = (freq: string) => {
+    switch (freq) {
+      case "Daily": return t("freqDaily");
+      case "Weekly": return t("freqWeekly");
+      case "Monthly": return t("freqMonthly");
+      default: return freq;
+    }
+  };
+
   const columns = [
-    { header: "Schedule Name", accessor: "name" as const, className: "font-medium" },
-    { header: "Target", accessor: "target" as const },
+    { header: t("colScheduleName"), accessor: "name" as const, className: "font-medium" },
+    { header: t("colTarget"), accessor: "target" as const },
     { 
-      header: "Company", 
+      header: t("colCompany"), 
       accessor: (row: any) => getCompanyName(row.company_id), 
       className: "text-text-muted" 
     },
-    { header: "Frequency", accessor: "frequency" as const, className: "text-text-muted" },
-    { header: "Next Run", accessor: "next_run" as const },
+    { header: t("colFrequency"), accessor: "frequency" as const, className: "text-text-muted" },
+    { header: t("colNextRun"), accessor: "next_run" as const },
     { 
-      header: "Status", 
+      header: t("colStatus"), 
       accessor: (row: any) => (
         <StatusBadge 
           status={row.status === "Active" ? "success" : "warning"} 
-          label={row.status || "Unknown"} 
+          label={getStatusTranslation(row.status) || "Unknown"} 
         />
       )
     },
     {
-      header: "Actions",
+      header: t("colActions"),
       accessor: (row: any) => (
         <button 
           onClick={(e) => { e.stopPropagation(); setSelectedSchedule(row); setIsViewModalOpen(true); }}
           className="p-1 text-text-muted hover:text-primary transition-colors"
-          title="View Details"
+          title={t("colActions")}
         >
           <Eye className="w-4 h-4" />
         </button>
@@ -176,14 +194,14 @@ export default function SchedulingPage() {
         action={
           <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors">
             <CalendarPlus className="w-4 h-4" />
-            New Schedule
+            {t("newSchedule")}
           </button>
         }
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-6">
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Company:</label>
+          <label className="text-sm text-text-muted font-medium">{t("companyLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -198,7 +216,7 @@ export default function SchedulingPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[200px] w-[200px]"
             >
               <span className="truncate pr-2">
-                {companyFilter === "All" ? "All Companies" : companyFilter}
+                {companyFilter === "All" ? t("allCompanies") : companyFilter}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -214,7 +232,7 @@ export default function SchedulingPage() {
                       setIsCompanyDropdownOpen(false);
                     }}
                   >
-                    {c}
+                    {c === "All" ? t("allCompanies") : c}
                   </button>
                 ))}
               </div>
@@ -223,7 +241,7 @@ export default function SchedulingPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Status:</label>
+          <label className="text-sm text-text-muted font-medium">{t("statusLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -238,7 +256,7 @@ export default function SchedulingPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {statusFilter === "All" ? "All Statuses" : statusFilter}
+                {statusFilter === "All" ? t("allStatuses") : getStatusTranslation(statusFilter)}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -254,7 +272,7 @@ export default function SchedulingPage() {
                       setIsStatusDropdownOpen(false);
                     }}
                   >
-                    {opt}
+                    {opt === "All" ? t("allStatuses") : getStatusTranslation(opt)}
                   </button>
                 ))}
               </div>
@@ -263,7 +281,7 @@ export default function SchedulingPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Frequency:</label>
+          <label className="text-sm text-text-muted font-medium">{t("frequencyLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -278,7 +296,7 @@ export default function SchedulingPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {frequencyFilter === "All" ? "All Frequencies" : frequencyFilter}
+                {frequencyFilter === "All" ? t("allFrequencies") : getFrequencyTranslation(frequencyFilter)}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isFrequencyDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -294,7 +312,7 @@ export default function SchedulingPage() {
                       setIsFrequencyDropdownOpen(false);
                     }}
                   >
-                    {opt}
+                    {opt === "All" ? t("allFrequencies") : getFrequencyTranslation(opt)}
                   </button>
                 ))}
               </div>
@@ -320,58 +338,58 @@ export default function SchedulingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface border border-border rounded-xl w-full max-w-lg shadow-2xl flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-border/50">
-              <h3 className="font-semibold text-lg">Create New Schedule</h3>
+              <h3 className="font-semibold text-lg">{t("createScheduleTitle")}</h3>
               <button onClick={() => setIsAddModalOpen(false)} className="text-text-muted hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddSchedule} className="p-5 flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-muted mb-1.5">Schedule Name</label>
-                <input required value={newSchedule.name} onChange={e => setNewSchedule({...newSchedule, name: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder="e.g. Weekly Production Scan" />
+                <label className="block text-sm font-medium text-text-muted mb-1.5">{t("scheduleNameLabel")}</label>
+                <input required value={newSchedule.name} onChange={e => setNewSchedule({...newSchedule, name: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder={t("scheduleNamePlaceholder")} />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-text-muted mb-1.5">Scan Type</label>
+                <label className="block text-sm font-medium text-text-muted mb-1.5">{t("scanTypeLabel")}</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${newSchedule.scan_type === "DISCOVERY" ? "bg-primary/10 border-primary text-primary" : "bg-base border-border text-text-muted hover:border-primary/50"}`}
                     onClick={() => setNewSchedule({...newSchedule, scan_type: "DISCOVERY"})}
                   >
-                    Network Discovery
+                    {t("discovery")}
                   </button>
                   <button
                     type="button"
                     className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${newSchedule.scan_type === "VULNERABILITY" ? "bg-primary/10 border-primary text-primary" : "bg-base border-border text-text-muted hover:border-primary/50"}`}
                     onClick={() => setNewSchedule({...newSchedule, scan_type: "VULNERABILITY"})}
                   >
-                    Vulnerability Scan
+                    {t("vulnerability")}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-muted mb-1.5">Target</label>
-                <input required value={newSchedule.target} onChange={e => setNewSchedule({...newSchedule, target: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder={newSchedule.scan_type === "DISCOVERY" ? "10.0.0.0/24" : "192.168.1.10 or 10.0.0.0/24"} />
+                <label className="block text-sm font-medium text-text-muted mb-1.5">{t("targetLabel")}</label>
+                <input required value={newSchedule.target} onChange={e => setNewSchedule({...newSchedule, target: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder={newSchedule.scan_type === "DISCOVERY" ? t("targetPlaceholderDiscovery") : t("targetPlaceholderVuln")} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-muted mb-1.5">Network Zone</label>
-                <input value={newSchedule.network_zone} onChange={e => setNewSchedule({...newSchedule, network_zone: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder="Custom Zone (e.g. Main Office)" />
+                <label className="block text-sm font-medium text-text-muted mb-1.5">{t("networkZoneLabel")}</label>
+                <input value={newSchedule.network_zone} onChange={e => setNewSchedule({...newSchedule, network_zone: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder={t("networkZonePlaceholder")} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-1.5">Frequency</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{t("frequencyLabel")}</label>
                   <select value={newSchedule.frequency} onChange={e => setNewSchedule({...newSchedule, frequency: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="Daily">Daily</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Monthly">Monthly</option>
+                    <option value="Daily">{t("freqDaily")}</option>
+                    <option value="Weekly">{t("freqWeekly")}</option>
+                    <option value="Monthly">{t("freqMonthly")}</option>
                   </select>
                 </div>
                 
                 {newSchedule.frequency === "Weekly" && (
                   <div>
-                    <label className="block text-sm font-medium text-text-muted mb-1.5">Day of Week</label>
+                    <label className="block text-sm font-medium text-text-muted mb-1.5">{t("dayOfWeekLabel")}</label>
                     <select value={newSchedule.dayOfWeek} onChange={e => setNewSchedule({...newSchedule, dayOfWeek: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
                       <option value="Monday">Monday</option>
                       <option value="Tuesday">Tuesday</option>
@@ -386,7 +404,7 @@ export default function SchedulingPage() {
 
                 {newSchedule.frequency === "Monthly" && (
                   <div>
-                    <label className="block text-sm font-medium text-text-muted mb-1.5">Day of Month</label>
+                    <label className="block text-sm font-medium text-text-muted mb-1.5">{t("dayOfMonthLabel")}</label>
                     <select value={newSchedule.dayOfMonth} onChange={e => setNewSchedule({...newSchedule, dayOfMonth: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
                       {[...Array(31)].map((_, i) => (
                         <option key={i+1} value={(i+1).toString()}>{i+1}</option>
@@ -396,14 +414,14 @@ export default function SchedulingPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-1.5">Time</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{t("timeLabel")}</label>
                   <input type="time" required value={newSchedule.time} onChange={e => setNewSchedule({...newSchedule, time: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-1.5">Company</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{t("colCompany")}</label>
                   <select required value={newSchedule.company_id} onChange={e => setNewSchedule({...newSchedule, company_id: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="">Select a company</option>
+                    <option value="">{t("allCompanies")}</option>
                     {companiesData.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -411,7 +429,7 @@ export default function SchedulingPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-1.5">Scanner Engine</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{t("scannerEngineLabel")}</label>
                   <select value={newSchedule.scanner_engine} onChange={e => setNewSchedule({...newSchedule, scanner_engine: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
                     <option value="OPENVAS">OpenVAS</option>
                     <option value="NMAP">Nmap</option>
@@ -421,9 +439,9 @@ export default function SchedulingPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-base rounded-lg transition-colors">Cancel</button>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-base rounded-lg transition-colors">{t("cancel")}</button>
                 <button type="submit" className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                  <CalendarPlus className="w-4 h-4" /> Save Schedule
+                  <CalendarPlus className="w-4 h-4" /> {t("saveSchedule")}
                 </button>
               </div>
             </form>
@@ -436,7 +454,7 @@ export default function SchedulingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsViewModalOpen(false)}>
           <div className="bg-surface h-full w-full max-w-md shadow-2xl flex flex-col animate-in slide-in-from-right-full duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b border-border/50 bg-base/50">
-              <h3 className="font-semibold text-xl">Schedule Details</h3>
+              <h3 className="font-semibold text-xl">{t("scheduleDetailsTitle")}</h3>
               <button onClick={() => setIsViewModalOpen(false)} className="text-text-muted hover:text-white transition-colors bg-surface p-1.5 rounded-md">
                 <X className="w-5 h-5" />
               </button>
@@ -446,36 +464,36 @@ export default function SchedulingPage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-2xl font-bold">{selectedSchedule.name}</h4>
-                  <StatusBadge status={selectedSchedule.status === "Active" ? "success" : "warning"} label={selectedSchedule.status} />
+                  <StatusBadge status={selectedSchedule.status === "Active" ? "success" : "warning"} label={getStatusTranslation(selectedSchedule.status)} />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Target</p>
+                    <p className="text-xs text-text-muted mb-1">{t("colTarget")}</p>
                     <p className="font-medium text-sm">{selectedSchedule.target}</p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Network Zone</p>
+                    <p className="text-xs text-text-muted mb-1">{t("networkZoneLabel")}</p>
                     <p className="font-medium text-sm">{selectedSchedule.network_zone || "N/A"}</p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Company</p>
+                    <p className="text-xs text-text-muted mb-1">{t("colCompany")}</p>
                     <p className="font-medium text-sm">{getCompanyName(selectedSchedule.company_id)}</p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Scan Type</p>
+                    <p className="text-xs text-text-muted mb-1">{t("scanTypeLabel")}</p>
                     <p className="font-medium text-sm">{selectedSchedule.scan_type}</p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Scanner Engine</p>
+                    <p className="text-xs text-text-muted mb-1">{t("scannerEngineLabel")}</p>
                     <p className="font-medium text-sm">{selectedSchedule.scanner_engine}</p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Frequency</p>
+                    <p className="text-xs text-text-muted mb-1">{t("colFrequency")}</p>
                     <p className="font-medium text-sm">{selectedSchedule.frequency}</p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50">
-                    <p className="text-xs text-text-muted mb-1">Next Run</p>
+                    <p className="text-xs text-text-muted mb-1">{t("colNextRun")}</p>
                     <p className="font-medium text-sm">{selectedSchedule.next_run}</p>
                   </div>
                 </div>
@@ -484,7 +502,7 @@ export default function SchedulingPage() {
             
             <div className="p-6 border-t border-border/50 bg-base/50">
               <button onClick={() => setIsViewModalOpen(false)} className="w-full py-2.5 bg-surface hover:bg-surface-hover border border-border text-white rounded-lg text-sm font-medium transition-colors">
-                Close
+                {t("close")}
               </button>
             </div>
           </div>

@@ -5,21 +5,23 @@ import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Play, ChevronDown, Edit, Trash2, RotateCw } from "lucide-react";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Play, ChevronDown, Edit, Trash2, RotateCw, Eye } from "lucide-react";
 import { NewScanModal } from "@/components/scans/NewScanModal";
 import { EditScanModal } from "@/components/scans/EditScanModal";
+import { ViewScanModal } from "@/components/scans/ViewScanModal";
 import { useSession } from "next-auth/react";
 import { canModify } from "@/lib/roles";
 import { fetchApi } from "@/lib/api";
 
 interface Company {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface Scan {
-  id: number;
-  company_id: number;
+  id: string;
+  company_id: string;
   name: string;
   target: string;
   scan_type: string;
@@ -27,6 +29,7 @@ interface Scan {
   progress: number;
   network_zone: string | null;
   scanner_engine: string;
+  created_at?: string;
 }
 
 export default function ScansPage() {
@@ -39,8 +42,10 @@ export default function ScansPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
   const [selectedZone, setSelectedZone] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedScan, setSelectedScan] = useState<Scan | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
@@ -81,7 +86,7 @@ export default function ScansPage() {
     fetchScans();
   }, [selectedCompany, selectedZone]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this scan?")) {
       try {
         await fetchApi(`/scans/${id}`, { method: "DELETE" });
@@ -114,11 +119,18 @@ export default function ScansPage() {
   };
 
   const columns = [
-    { header: "Name", accessor: "name" as const, className: "font-medium" },
-    { header: "Target", accessor: "target" as const },
-    { header: "Type", accessor: "scan_type" as const },
+    { header: t("nameCol"), accessor: "name" as const, className: "font-medium" },
+    { header: t("targetCol"), accessor: "target" as const },
+    { header: t("typeCol"), accessor: "scan_type" as const },
     {
-      header: "Status",
+      header: t("dateTimeCol"),
+      accessor: (row: any) => {
+        if (!row.created_at) return "-";
+        return new Date(row.created_at).toLocaleString();
+      }
+    },
+    {
+      header: t("statusCol"),
       accessor: (row: any) => {
         let variant = "info";
         if (row.status === "COMPLETED") variant = "success";
@@ -128,26 +140,26 @@ export default function ScansPage() {
         const isProgress = row.status === "IN_PROGRESS";
         const progress = row.progress || 0;
 
+        let statusLabel = row.status;
+        if (row.status === "PENDING") statusLabel = t("statusPending");
+        if (row.status === "IN_PROGRESS") statusLabel = t("statusInProgress");
+        if (row.status === "COMPLETED") statusLabel = t("statusCompleted");
+        if (row.status === "FAILED") statusLabel = t("statusFailed");
+
         return (
           <div className="flex items-center gap-3">
-            <StatusBadge status={variant as any} label={row.status.replace("_", " ")} />
-            {isProgress && (
-              <div className="flex items-center gap-2 w-24">
-                <div className="flex-1 h-1.5 bg-base rounded-full overflow-hidden">
-                  <div className="h-full bg-status-warning rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-                <span className="text-[10px] text-text-muted font-medium">{progress}%</span>
-              </div>
-            )}
+            <StatusBadge status={variant as any} label={statusLabel} />
           </div>
         );
       }
     },
-    { header: "Company ID", accessor: "company_id" as const },
     {
       header: t("actions") || "Actions",
       accessor: (row: any) => (
         <div className="flex items-center gap-2">
+          <button onClick={() => { setSelectedScan(row); setIsViewModalOpen(true); }} className="p-1 text-text-muted hover:text-white transition-colors" title={t("view") || "View Details"}>
+            <Eye className="w-4 h-4" />
+          </button>
           {canModify(session as any) && (
             <>
               <button onClick={() => { setSelectedScan(row); setIsEditModalOpen(true); }} className="p-1 text-text-muted hover:text-white transition-colors" title={t("edit") || "Edit"}>
@@ -178,7 +190,7 @@ export default function ScansPage() {
               className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors"
             >
               <Play className="w-4 h-4" fill="currentColor" />
-              New Scan
+              {t("newScan")}
             </button>
           ) : undefined
         }
@@ -186,7 +198,7 @@ export default function ScansPage() {
 
       <div className="mb-6 flex flex-wrap items-center gap-6">
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Company:</label>
+          <label className="text-sm text-text-muted font-medium">{t("companyLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -201,7 +213,7 @@ export default function ScansPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[200px] w-[200px]"
             >
               <span className="truncate pr-2">
-                {selectedCompany === "" ? "All Companies" : companies.find(c => c.id.toString() === selectedCompany)?.name || "All Companies"}
+                {selectedCompany === "" ? t("allCompanies") : companies.find(c => c.id.toString() === selectedCompany)?.name || t("allCompanies")}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -215,7 +227,7 @@ export default function ScansPage() {
                     setIsDropdownOpen(false);
                   }}
                 >
-                  All Companies
+                  {t("allCompanies")}
                 </button>
                 {companies.map(c => (
                   <button
@@ -235,7 +247,7 @@ export default function ScansPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Status:</label>
+          <label className="text-sm text-text-muted font-medium">{t("statusLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -250,7 +262,10 @@ export default function ScansPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {selectedStatus === "" ? "All Statuses" : selectedStatus.replace("_", " ")}
+                {selectedStatus === "" ? t("allStatuses") : 
+                  (selectedStatus === "PENDING" ? t("statusPending") : 
+                  (selectedStatus === "IN_PROGRESS" ? t("statusInProgress") : 
+                  (selectedStatus === "COMPLETED" ? t("statusCompleted") : t("statusFailed"))))}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -258,11 +273,11 @@ export default function ScansPage() {
             {isStatusDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
                 {[
-                  { value: "", label: "All Statuses" },
-                  { value: "PENDING", label: "PENDING" },
-                  { value: "IN_PROGRESS", label: "IN PROGRESS" },
-                  { value: "COMPLETED", label: "COMPLETED" },
-                  { value: "FAILED", label: "FAILED" },
+                  { value: "", label: t("allStatuses") },
+                  { value: "PENDING", label: t("statusPending") },
+                  { value: "IN_PROGRESS", label: t("statusInProgress") },
+                  { value: "COMPLETED", label: t("statusCompleted") },
+                  { value: "FAILED", label: t("statusFailed") },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -281,7 +296,7 @@ export default function ScansPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Type:</label>
+          <label className="text-sm text-text-muted font-medium">{t("typeLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -296,7 +311,7 @@ export default function ScansPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {selectedType === "" ? "All Types" : selectedType}
+                {selectedType === "" ? t("allTypes") : (selectedType === "DISCOVERY" ? t("typeDiscovery") : t("typeVulnerability"))}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -304,9 +319,9 @@ export default function ScansPage() {
             {isTypeDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
                 {[
-                  { value: "", label: "All Types" },
-                  { value: "DISCOVERY", label: "DISCOVERY" },
-                  { value: "VULNERABILITY", label: "VULNERABILITY" },
+                  { value: "", label: t("allTypes") },
+                  { value: "DISCOVERY", label: t("typeDiscovery") },
+                  { value: "VULNERABILITY", label: t("typeVulnerability") },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -325,7 +340,7 @@ export default function ScansPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">Network Zone:</label>
+          <label className="text-sm text-text-muted font-medium">{t("networkZoneLabel")}</label>
           <div 
             className="relative" 
             tabIndex={0} 
@@ -340,7 +355,7 @@ export default function ScansPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {selectedZone === "" ? "All Zones" : selectedZone}
+                {selectedZone === "" ? t("allZones") : selectedZone}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isZoneDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -348,11 +363,8 @@ export default function ScansPage() {
             {isZoneDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
                 {[
-                  { value: "", label: "All Zones" },
-                  { value: "DMZ", label: "DMZ" },
-                  { value: "Internal", label: "Internal" },
-                  { value: "Cloud", label: "Cloud" },
-                  { value: "Gateway", label: "Gateway" },
+                  { value: "", label: t("allZones") },
+                  ...Array.from(new Set(["DMZ", "Internal", "Cloud", "Gateway", ...scans.map(s => s.network_zone).filter(Boolean)])).map(z => ({ value: z as string, label: z as string }))
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -369,13 +381,23 @@ export default function ScansPage() {
             )}
           </div>
         </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">{t("dateLabel")}</label>
+          <DatePicker 
+            value={selectedDate}
+            onChange={(date) => setSelectedDate(date)}
+            placeholder="Select date"
+          />
+        </div>
       </div>
 
       <DataTable
         columns={columns}
         data={scans.filter(scan => 
           (selectedStatus === "" || scan.status === selectedStatus) &&
-          (selectedType === "" || scan.scan_type === selectedType)
+          (selectedType === "" || scan.scan_type === selectedType) &&
+          (selectedDate === "" || (scan.created_at && new Date(scan.created_at).toISOString().split('T')[0] === selectedDate))
         )}
         keyField="id"
       />
@@ -392,6 +414,11 @@ export default function ScansPage() {
         isOpen={isEditModalOpen}
         onClose={() => { setIsEditModalOpen(false); setSelectedScan(null); }}
         onSuccess={() => fetchScans()}
+        scan={selectedScan}
+      />
+      <ViewScanModal
+        isOpen={isViewModalOpen}
+        onClose={() => { setIsViewModalOpen(false); setSelectedScan(null); }}
         scan={selectedScan}
       />
     </div>

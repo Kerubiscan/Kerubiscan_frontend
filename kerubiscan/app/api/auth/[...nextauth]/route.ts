@@ -16,6 +16,10 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: '/fr/login',
   },
+  session: {
+    strategy: "jwt",
+    maxAge: 15 * 60, // 15 minutes of inactivity before the session expires locally
+  },
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
@@ -27,12 +31,18 @@ export const authOptions: AuthOptions = {
             if (payload) {
               const decoded = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
               token.roles = decoded?.realm_access?.roles || [];
+              token.expiresAt = decoded?.exp;
             }
           } catch (e) {
             console.error("Failed to decode token", e);
           }
         }
       }
+      
+      if (token.expiresAt && Math.floor(Date.now() / 1000) > (token.expiresAt as number)) {
+        return { ...token, error: "RefreshAccessTokenError" };
+      }
+      
       return token;
     },
     async session({ session, token }: any) {

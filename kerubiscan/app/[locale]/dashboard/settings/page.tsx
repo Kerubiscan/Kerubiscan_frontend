@@ -34,13 +34,13 @@ export default function SettingsPage() {
       />
       
       <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-lg font-medium text-white mb-4">Scanner Configuration</h3>
-        <p className="text-text-muted text-sm mb-6">Manage local settings for defaults used during scan creation.</p>
+        <h3 className="text-lg font-medium text-white mb-4">{t("scannerConfigTitle")}</h3>
+        <p className="text-text-muted text-sm mb-6">{t("scannerConfigDesc")}</p>
         
         <div className="space-y-6 max-w-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-text-muted mb-2">Default Scanner Engine</label>
+              <label className="block text-sm font-medium text-text-muted mb-2">{t("defaultScannerLabel")}</label>
               <select value={defaultScanner} onChange={e => setDefaultScanner(e.target.value)} className="w-full bg-base border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary appearance-none">
                 <option value="OPENVAS">OpenVAS</option>
                 <option value="NMAP">Nmap</option>
@@ -49,7 +49,7 @@ export default function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-muted mb-2">Default AI Provider</label>
+              <label className="block text-sm font-medium text-text-muted mb-2">{t("defaultAiLabel")}</label>
               <select value={defaultAi} onChange={e => setDefaultAi(e.target.value)} className="w-full bg-base border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary appearance-none">
                 <option value="ollama">Ollama (Local)</option>
                 <option value="openai">OpenAI (Cloud)</option>
@@ -60,11 +60,11 @@ export default function SettingsPage() {
           <div className="pt-4 border-t border-border/50 flex items-center gap-4">
             <button onClick={handleSave} className="px-6 py-2 flex items-center gap-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors">
               <Save className="w-4 h-4" />
-              Save Changes
+              {t("saveChanges")}
             </button>
             {isSaved && (
               <span className="text-status-success text-sm font-medium animate-in fade-in">
-                Settings saved locally!
+                {t("settingsSaved")}
               </span>
             )}
           </div>
