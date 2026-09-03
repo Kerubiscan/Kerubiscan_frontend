@@ -277,7 +277,7 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
   ];
 
   const filteredData = useMemo(() => {
-    return vulnsData.filter(item => {
+    const filtered = vulnsData.filter(item => {
       const enriched = enrichVuln(item);
       const matchSeverity = severityFilter === "All" || enriched.severity === severityFilter;
       const matchCompany = companyFilter === "All" || enriched.company === companyFilter;

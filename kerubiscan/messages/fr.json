@@ -55,6 +55,7 @@
     "scans": {
       "title": "Scans",
       "description": "Gérez et lancez vos scans de vulnérabilités.",
+      "view": "Voir",
       "actions": "Actions",
       "delete": "Supprimer",
       "edit": "Modifier",

@@ -55,6 +55,7 @@
     "scans": {
       "title": "Scans",
       "description": "Manage and launch your vulnerability scans.",
+      "view": "View",
       "actions": "Actions",
       "delete": "Delete",
       "edit": "Edit",
