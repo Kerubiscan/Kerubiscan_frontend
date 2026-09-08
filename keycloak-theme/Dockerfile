@@ -2,6 +2,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Install Maven and Java (required by keycloakify to package the .jar)
+RUN apk add --no-cache maven openjdk17
+
 # Install dependencies
 COPY package*.json ./
 RUN npm install

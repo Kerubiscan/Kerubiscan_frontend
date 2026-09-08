@@ -8,10 +8,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Update with your backend URL
-      - BACKEND_API_URL=http://host.docker.internal:8000
+      # Updated to use Docker network service name for Kimia
+      - BACKEND_API_URL=http://api:8000
     depends_on:
       - keycloak
+    networks:
+      - kerubiscan-net
 
   keycloak:
     build:
@@ -23,3 +25,9 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
       - "8080:8080"
+    networks:
+      - kerubiscan-net
+
+networks:
+  kerubiscan-net:
+    external: true
