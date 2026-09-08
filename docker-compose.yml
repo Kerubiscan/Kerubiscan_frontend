@@ -6,7 +6,7 @@ services:
       context: ./kerubiscan
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "9443:3000"
     environment:
       # Updated to use Docker network service name for Kimia
       - BACKEND_API_URL=http://api:8000
@@ -24,7 +24,7 @@ services:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
-      - "8080:8080"
+      - "1990:8080"
     networks:
       - kerubiscan-net
 
