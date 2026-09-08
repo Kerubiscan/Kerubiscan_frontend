@@ -5,8 +5,10 @@ import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ChevronDown, Eye, X, Loader2, Download } from "lucide-react";
+import { ChevronDown, Eye, X, Loader2, Download, Bot } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import { toast } from "sonner";
+
 
 export default function VulnerabilitiesPage() {
   const t = useTranslations("Pages.vulnerabilities");
@@ -120,17 +122,16 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportContent, setReportContent] = useState("");
   const [reportFilename, setReportFilename] = useState("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [vulnsRes, assetsRes, companiesRes] = await Promise.all([
+      const [vulnsRes, companiesRes] = await Promise.all([
         fetchApi<any>("/vulnerabilities?size=500"),
-        fetchApi<any>("/assets?size=500"),
         fetchApi<any[]>("/scans/companies")
       ]);
       setVulnsData(vulnsRes.items || []);
-      setAssetsData(assetsRes.items || []);
       setCompaniesData(companiesRes || []);
     } catch (err) {
       console.error("Failed to fetch vulnerabilities data", err);
@@ -158,22 +159,45 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
     setOpenRowId(null);
   };
 
+  const handleAIEnhance = async () => {
+    if (!selectedVuln) return;
+    setIsGeneratingAI(true);
+    try {
+      const res = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/generate-remediation`, {
+        method: "POST",
+        body: JSON.stringify({ language: "English" }) 
+      });
+      
+      const aiContent = res.ai_remediation || "";
+      setReportContent(prev => prev + `\n\nAI ANALYSIS & REMEDIATION\n======================\n${aiContent}`);
+      toast?.success?.("AI Analysis added to report!");
+    } catch (err) {
+      console.error(err);
+      toast?.error?.("Failed to generate AI analysis");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const enrichVuln = (vuln: any) => {
-    const asset = assetsData.find(a => a.id === vuln.asset_id);
-    const companyName = asset?.company_id 
-      ? companiesData.find(c => c.id === asset.company_id)?.name || "-" 
+    // ip_address, asset_name, company_id, network_zone are now embedded directly
+    // by the backend join — no client-side cross-reference needed
+    const companyName = vuln.company_id
+      ? companiesData.find((c: any) => c.id === vuln.company_id)?.name || "-"
       : "-";
-    
+
     return {
       ...vuln,
       cve: vuln.cve_id || "-",
       name: vuln.title,
-      target: asset ? `${asset.name} (${asset.ip_address})` : `Asset ID: ${vuln.asset_id}`,
+      target: vuln.asset_name
+        ? `${vuln.asset_name} (${vuln.ip_address})`
+        : vuln.ip_address || `Asset ID: ${vuln.asset_id}`,
       company: companyName,
       score: vuln.cvss_base_score || "-",
-      network_zone: asset?.network_zone || "-",
-      ip_address: asset?.ip_address,
-      last_scan_raw_output: asset?.last_scan_raw_output || null
+      network_zone: vuln.network_zone || "-",
+      ip_address: vuln.ip_address || null,
+      last_scan_raw_output: vuln.last_scan_raw_output || null
     };
   };
 
@@ -197,7 +221,16 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
     },
     { 
       header: t("targetAssetCol"), 
-      accessor: (row: any) => enrichVuln(row).target 
+      accessor: (row: any) => {
+        const enriched = enrichVuln(row);
+        const namePart = enriched.target.split(' (')[0];
+        return (
+          <div className="flex flex-col">
+            <span className="font-mono text-[13px] text-text-main">{enriched.ip_address || "No IP"}</span>
+            <span className="text-[11px] text-text-muted">{namePart}</span>
+          </div>
+        );
+      }
     },
     { 
       header: t("companyCol"), 
@@ -610,9 +643,16 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold uppercase tracking-wider text-text-muted border-b border-border/50 pb-2">Scanner Logs / Output</h4>
                 {selectedVuln.last_scan_raw_output ? (
-                  <pre className="text-xs text-text-main bg-base p-4 rounded-lg overflow-x-auto max-h-64 border border-border/50 whitespace-pre-wrap">
-                    {selectedVuln.last_scan_raw_output}
-                  </pre>
+                  <div>
+                    <pre className="text-xs text-text-main bg-base p-4 rounded-lg overflow-x-auto max-h-48 border border-border/50 whitespace-pre-wrap overflow-y-auto">
+                      {selectedVuln.last_scan_raw_output.length > 3000
+                        ? selectedVuln.last_scan_raw_output.slice(0, 3000) + "\n\n... [truncated — full log available in raw scan data]"
+                        : selectedVuln.last_scan_raw_output}
+                    </pre>
+                    <p className="text-[10px] text-text-muted mt-1">
+                      Raw scan output from asset • {selectedVuln.last_scan_raw_output.length.toLocaleString()} chars
+                    </p>
+                  </div>
                 ) : (
                   <p className="text-sm text-text-muted italic">No logs available for this scan.</p>
                 )}
@@ -690,19 +730,31 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
               />
             </div>
             
-            <div className="p-6 border-t border-border/50 bg-base/50 rounded-b-xl flex gap-4 justify-end">
-              <button 
-                onClick={() => setIsReportModalOpen(false)} 
-                className="px-6 py-2.5 bg-surface hover:bg-surface-hover border border-border text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleExport} 
-                className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" /> Export Report
-              </button>
+            <div className="p-6 border-t border-border/50 bg-base/50 rounded-b-xl flex gap-4 justify-between items-center">
+              <div>
+                 <button 
+                   onClick={handleAIEnhance}
+                   disabled={isGeneratingAI}
+                   className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                 >
+                   {isGeneratingAI ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
+                   Enhance with AI
+                 </button>
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setIsReportModalOpen(false)} 
+                  className="px-6 py-2.5 bg-surface hover:bg-surface-hover border border-border text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleExport} 
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Export Report
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -155,6 +155,18 @@ export default function AssetsPage() {
     }
   };
 
+  const handleDeleteAllAssets = async () => {
+    if (!confirm("Are you absolutely sure you want to delete ALL assets? This action cannot be undone.")) return;
+    try {
+      await fetchApi("/assets", { method: "DELETE" });
+      setSelectedAssetIds(new Set());
+      loadAssets();
+    } catch (err) {
+      console.error("Failed to delete all assets", err);
+      alert("Failed to delete all assets.");
+    }
+  };
+
   const handleScanAssets = async (assetIp?: string) => {
     try {
       const ipsToScan = assetIp 
@@ -165,20 +177,20 @@ export default function AssetsPage() {
 
       if (!confirm(`Queue Vulnerability Scan for ${ipsToScan.length} asset(s)?`)) return;
 
-      for (const ip of ipsToScan) {
-        await fetchApi("/scans", {
-          method: "POST",
-          body: JSON.stringify({
-            company_name: "KerubiScan",
-            target: ip,
-            network_zone: "Internal",
-            scan_type: "VULNERABILITY",
-            scanner_engine: vulnEngine
-          })
-        });
-      }
+      const targetString = ipsToScan.join(", ");
+
+      await fetchApi("/scans", {
+        method: "POST",
+        body: JSON.stringify({
+          company_name: "KerubiScan",
+          target: targetString,
+          network_zone: "Internal",
+          scan_type: "VULNERABILITY",
+          scanner_engine: vulnEngine
+        })
+      });
       
-      alert(`Successfully queued ${ipsToScan.length} scan(s). Check the Scans page for progress.`);
+      alert(`Successfully queued a multi-target scan for ${ipsToScan.length} asset(s). Check the Scans page for progress.`);
       if (!assetIp) setSelectedAssetIds(new Set());
     } catch (err) {
       console.error("Failed to queue scans", err);
@@ -370,6 +382,13 @@ export default function AssetsPage() {
                 Scan Selected ({selectedAssetIds.size})
               </button>
             )}
+            <button 
+              onClick={handleDeleteAllAssets} 
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete All
+            </button>
             <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors">
               <Plus className="w-4 h-4" />
               {t("addAssetButton")}

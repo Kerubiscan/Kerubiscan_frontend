@@ -1,0 +1,10 @@
+{
+  "name": "kerubiscan-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx concurrently \"npm run dev --prefix kerubiscan\" \"npm run dev --prefix keycloak-theme\"",
+    "build": "npm run build --prefix kerubiscan && npm run build-keycloak-theme --prefix keycloak-theme",
+    "install:all": "npm install --prefix kerubiscan && npm install --prefix keycloak-theme"
+  }
+}

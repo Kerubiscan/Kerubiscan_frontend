@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { X, ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, ChevronDown, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import { fetchApi } from "@/lib/api";
@@ -12,7 +12,11 @@ interface NewScanModalProps {
 
 export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) {
   const t = useTranslations("Pages.scans");
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  
   const [scanType, setScanType] = useState("DISCOVERY");
   const [target, setTarget] = useState("");
   const [networkZone, setNetworkZone] = useState("");
@@ -20,11 +24,28 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchApi("/scans/companies")
+        .then((data: any) => {
+          setCompanies(data);
+          if (data.length > 0 && !isCreatingNew) {
+            setCompanyId(data[0].id);
+          } else if (data.length === 0) {
+            setIsCreatingNew(true);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isOpen]);
 
   const scannerOptions = [
     { value: "OPENVAS", label: "OpenVAS" },
     { value: "NMAP", label: "Nmap" },
     { value: "NUCLEI", label: "Nuclei" },
+    { value: "OWASP_ZAP", label: "OWASP ZAP" },
     { value: "NESSUS", label: "Nessus" },
   ];
 
@@ -32,7 +53,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyName || !target) {
+    if ((!isCreatingNew && !companyId) || (isCreatingNew && !companyName) || !target) {
       setError("Please fill all required fields");
       return;
     }
@@ -43,7 +64,8 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
       await fetchApi("/scans", {
         method: "POST",
         body: JSON.stringify({
-          company_name: companyName,
+          company_id: isCreatingNew ? null : companyId,
+          company_name: isCreatingNew ? companyName : null,
           scan_type: scanType,
           target: target,
           network_zone: networkZone || null,
@@ -76,15 +98,78 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
           {error && <div className="p-3 bg-status-critical/10 border border-status-critical/20 text-status-critical text-sm rounded-lg">{error}</div>}
           
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-main">Company Name</label>
-            <input 
-              type="text" 
-              className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              placeholder="e.g. Acme Corp"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              required
-            />
+            <label className="text-sm font-medium text-text-main">Company</label>
+            {isCreatingNew ? (
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  placeholder="Enter new company name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingNew(false)}
+                  className="px-3 py-2 bg-base border border-border rounded-lg text-sm hover:bg-surface transition-colors whitespace-nowrap"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div 
+                className="relative" 
+                tabIndex={0} 
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setIsCompanyDropdownOpen(false);
+                  }
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+                  className="flex items-center justify-between w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                >
+                  <span className="truncate pr-2">
+                    {companies.find(c => c.id === companyId)?.name || "Select Company"}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isCompanyDropdownOpen && (
+                  <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {companies.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors truncate ${companyId === c.id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                        onClick={() => {
+                          setCompanyId(c.id);
+                          setIsCompanyDropdownOpen(false);
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                    <div className="border-t border-border mt-1 pt-1">
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-primary hover:bg-base transition-colors"
+                        onClick={() => {
+                          setIsCreatingNew(true);
+                          setIsCompanyDropdownOpen(false);
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Create New Company
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -104,9 +189,18 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
               >
                 Vulnerability Scan
               </button>
+              <button
+                type="button"
+                className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${scanType === "WEB_APP" ? "bg-primary/10 border-primary text-primary" : "bg-base border-border text-text-muted hover:border-primary/50"}`}
+                onClick={() => setScanType("WEB_APP")}
+              >
+                Application Scan
+              </button>
             </div>
             <p className="text-xs text-text-muted mt-1">
-              {scanType === "DISCOVERY" ? "Provide a gateway (e.g. 10.0.0.0/24) to discover assets." : "Provide an asset IP (e.g. 192.168.1.10) or subnet (e.g. 10.0.0.0/24) to scan."}
+              {scanType === "DISCOVERY" ? "Provide a gateway (e.g. 10.0.0.0/24) to discover assets." : 
+               scanType === "WEB_APP" ? "Provide a web application URL (e.g. https://example.com) to scan." :
+               "Provide an asset IP (e.g. 192.168.1.10) or subnet (e.g. 10.0.0.0/24) to scan."}
             </p>
           </div>
 
@@ -115,7 +209,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
             <input 
               type="text" 
               className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              placeholder={scanType === "DISCOVERY" ? "10.0.0.0/24" : "192.168.1.10 or 10.0.0.0/24"}
+              placeholder={scanType === "DISCOVERY" ? "10.0.0.0/24" : scanType === "WEB_APP" ? "https://example.com" : "192.168.1.10 or 10.0.0.0/24"}
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               required
@@ -195,3 +289,4 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
     </div>
   );
 }
+

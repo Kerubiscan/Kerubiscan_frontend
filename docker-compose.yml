@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./kerubiscan
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Update with your backend URL
+      - BACKEND_API_URL=http://host.docker.internal:8000
+    depends_on:
+      - keycloak
+
+  keycloak:
+    build:
+      context: ./keycloak-theme
+      dockerfile: Dockerfile
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8080:8080"

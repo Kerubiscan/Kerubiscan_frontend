@@ -127,16 +127,16 @@ export default function ReportsPage() {
     }
   };
 
-  const handleDownloadPdf = async (scanIdToDownload?: number) => {
+  const handleDownloadHtml = async (scanIdToDownload?: number) => {
     if (activeTab === "scan") {
       const id = scanIdToDownload || selectedScanId;
       if (!id) return;
-      window.open(`/api/v1/scans/${id}/report/pdf?scanner_company=${encodeURIComponent(scannerCompany)}&target_company=${encodeURIComponent(targetCompany)}`, "_blank");
+      window.open(`/api/v1/scans/${id}/report/html?scanner_company=${encodeURIComponent(scannerCompany)}&target_company=${encodeURIComponent(targetCompany)}`, "_blank");
     } else {
       if (!selectedAssetId) return;
       try {
         const token = localStorage.getItem("auth_token") || "";
-        const response = await fetch(`/api/v1/assets/${selectedAssetId}/report/pdf`, {
+        const response = await fetch(`/api/v1/assets/${selectedAssetId}/report/html`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -149,13 +149,13 @@ export default function ReportsPage() {
           })
         });
 
-        if (!response.ok) throw new Error("Failed to generate PDF");
+        if (!response.ok) throw new Error("Failed to generate HTML");
 
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `rapport_vuln_${selectedAsset?.name || 'asset'}.pdf`;
+        a.download = `rapport_vuln_${selectedAsset?.name || 'asset'}.html`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -178,7 +178,7 @@ export default function ReportsPage() {
       header: t("actionCol"), 
       accessor: (row: any) => (
         <button 
-          onClick={() => handleDownloadPdf(row.id)}
+          onClick={() => handleDownloadHtml(row.id)}
           className="text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
         >
           <Download className="w-4 h-4" /> {t("downloadAction")}
@@ -200,12 +200,12 @@ export default function ReportsPage() {
         description={t("description")} 
         action={
           <button 
-            onClick={() => handleDownloadPdf()} 
+            onClick={() => handleDownloadHtml()} 
             disabled={activeTab === "scan" ? !selectedScanId : !selectedAssetId}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover disabled:bg-primary/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
           >
             <FileText className="w-4 h-4" />
-            {t("downloadPdf")}
+            Download HTML
           </button>
         }
       />

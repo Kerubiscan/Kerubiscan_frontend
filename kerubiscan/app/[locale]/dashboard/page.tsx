@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { XCircle, AlertTriangle, Shield, Info, Calendar, Loader2 } from "lucide-react";
+import { XCircle, AlertTriangle, Shield, Info, Calendar, Loader2, Layers } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
@@ -225,11 +225,33 @@ export default function DashboardPage() {
             <div className="space-y-4 text-sm mb-6">
               <div className="flex justify-between">
                 <span className="text-text-muted">{t("latestScan.name")}</span>
-                <span className="font-medium text-right">{latestScan?.name}</span>
+                <span className="font-medium text-right">
+                  {latestScan?.target && latestScan.target.includes(',') ? (
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <div className="bg-primary/20 text-primary p-0.5 rounded" title="Multi-Target Task"><Layers className="w-3 h-3" /></div>
+                      Multi-Target Batch
+                    </div>
+                  ) : (
+                    latestScan?.name
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">{t("latestScan.target")}</span>
-                <span className="font-medium text-right">{latestScan?.target}</span>
+                <span className="font-medium text-right">
+                  {latestScan?.target && latestScan.target.includes(',') ? (
+                    <div className="flex items-center gap-2 justify-end">
+                      <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                        {latestScan.target.split(",").length} IPs
+                      </span>
+                      <span className="truncate max-w-[120px] text-text-muted" title={latestScan.target}>
+                        {latestScan.target}
+                      </span>
+                    </div>
+                  ) : (
+                    latestScan?.target
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">{t("latestScan.date")}</span>

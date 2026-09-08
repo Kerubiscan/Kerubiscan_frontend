@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Play, ChevronDown, Edit, Trash2, RotateCw, Eye } from "lucide-react";
+import { Play, ChevronDown, Edit, Trash2, RotateCw, Eye, Layers } from "lucide-react";
 import { NewScanModal } from "@/components/scans/NewScanModal";
 import { EditScanModal } from "@/components/scans/EditScanModal";
 import { ViewScanModal } from "@/components/scans/ViewScanModal";
@@ -97,6 +97,19 @@ export default function ScansPage() {
     }
   };
 
+  const handleDeleteCompany = async (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to delete company '${name}'? This cannot be undone.`)) {
+      try {
+        await fetchApi(`/scans/companies/${id}`, { method: "DELETE" });
+        if (selectedCompany === id) setSelectedCompany("");
+        fetchCompanies();
+      } catch (err: any) {
+        alert(err.message || "Failed to delete company.");
+      }
+    }
+  };
+
   const handleRerun = async (scan: Scan) => {
     try {
       const company = companies.find(c => c.id === scan.company_id);
@@ -119,8 +132,37 @@ export default function ScansPage() {
   };
 
   const columns = [
-    { header: t("nameCol"), accessor: "name" as const, className: "font-medium" },
-    { header: t("targetCol"), accessor: "target" as const },
+    {
+      header: t("nameCol"),
+      accessor: (row: any) => {
+        const isMulti = row.target && row.target.includes(",");
+        return (
+          <div className="flex items-center gap-2">
+            {isMulti && <div className="bg-primary/20 text-primary p-1 rounded" title="Multi-Target Task"><Layers className="w-3.5 h-3.5" /></div>}
+            <span className="font-medium">{isMulti ? "Multi-Target Batch" : row.name}</span>
+          </div>
+        );
+      }
+    },
+    {
+      header: t("targetCol"),
+      accessor: (row: any) => {
+        if (row.target && row.target.includes(",")) {
+          const count = row.target.split(",").length;
+          return (
+            <div className="flex items-center gap-2">
+              <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                {count} IPs
+              </span>
+              <span className="text-xs text-text-muted truncate max-w-[120px]" title={row.target}>
+                {row.target}
+              </span>
+            </div>
+          );
+        }
+        return row.target;
+      }
+    },
     { header: t("typeCol"), accessor: "scan_type" as const },
     {
       header: t("dateTimeCol"),
@@ -136,7 +178,7 @@ export default function ScansPage() {
         if (row.status === "COMPLETED") variant = "success";
         if (row.status === "FAILED") variant = "critical";
         if (row.status === "IN_PROGRESS" || row.status === "PENDING") variant = "warning";
-        
+
         const isProgress = row.status === "IN_PROGRESS";
         const progress = row.progress || 0;
 
@@ -199,9 +241,9 @@ export default function ScansPage() {
       <div className="mb-6 flex flex-wrap items-center gap-6">
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">{t("companyLabel")}</label>
-          <div 
-            className="relative" 
-            tabIndex={0} 
+          <div
+            className="relative"
+            tabIndex={0}
             onBlur={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsDropdownOpen(false);
@@ -230,16 +272,24 @@ export default function ScansPage() {
                   {t("allCompanies")}
                 </button>
                 {companies.map(c => (
-                  <button
-                    key={c.id}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors truncate ${selectedCompany === c.id.toString() ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
-                    onClick={() => {
-                      setSelectedCompany(c.id.toString());
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    {c.name}
-                  </button>
+                  <div key={c.id} className="relative flex items-center w-full group">
+                    <button
+                      className={`w-full text-left px-3 py-2 pr-8 text-sm hover:bg-base transition-colors truncate ${selectedCompany === c.id.toString() ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                      onClick={() => {
+                        setSelectedCompany(c.id.toString());
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      {c.name}
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteCompany(c.id.toString(), c.name, e)}
+                      className="absolute right-2 p-1 text-text-muted hover:text-status-critical opacity-50 group-hover:opacity-100 transition-all"
+                      title="Delete Company"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -248,9 +298,9 @@ export default function ScansPage() {
 
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">{t("statusLabel")}</label>
-          <div 
-            className="relative" 
-            tabIndex={0} 
+          <div
+            className="relative"
+            tabIndex={0}
             onBlur={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsStatusDropdownOpen(false);
@@ -262,10 +312,10 @@ export default function ScansPage() {
               className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
             >
               <span className="truncate pr-2">
-                {selectedStatus === "" ? t("allStatuses") : 
-                  (selectedStatus === "PENDING" ? t("statusPending") : 
-                  (selectedStatus === "IN_PROGRESS" ? t("statusInProgress") : 
-                  (selectedStatus === "COMPLETED" ? t("statusCompleted") : t("statusFailed"))))}
+                {selectedStatus === "" ? t("allStatuses") :
+                  (selectedStatus === "PENDING" ? t("statusPending") :
+                    (selectedStatus === "IN_PROGRESS" ? t("statusInProgress") :
+                      (selectedStatus === "COMPLETED" ? t("statusCompleted") : t("statusFailed"))))}
               </span>
               <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -297,9 +347,9 @@ export default function ScansPage() {
 
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">{t("typeLabel")}</label>
-          <div 
-            className="relative" 
-            tabIndex={0} 
+          <div
+            className="relative"
+            tabIndex={0}
             onBlur={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsTypeDropdownOpen(false);
@@ -322,6 +372,7 @@ export default function ScansPage() {
                   { value: "", label: t("allTypes") },
                   { value: "DISCOVERY", label: t("typeDiscovery") },
                   { value: "VULNERABILITY", label: t("typeVulnerability") },
+                  { value: "WEB_APP", label: "Application Scan" },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -341,9 +392,9 @@ export default function ScansPage() {
 
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">{t("networkZoneLabel")}</label>
-          <div 
-            className="relative" 
-            tabIndex={0} 
+          <div
+            className="relative"
+            tabIndex={0}
             onBlur={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsZoneDropdownOpen(false);
@@ -384,7 +435,7 @@ export default function ScansPage() {
 
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">{t("dateLabel")}</label>
-          <DatePicker 
+          <DatePicker
             value={selectedDate}
             onChange={(date) => setSelectedDate(date)}
             placeholder="Select date"
@@ -394,7 +445,7 @@ export default function ScansPage() {
 
       <DataTable
         columns={columns}
-        data={scans.filter(scan => 
+        data={scans.filter(scan =>
           (selectedStatus === "" || scan.status === selectedStatus) &&
           (selectedType === "" || scan.scan_type === selectedType) &&
           (selectedDate === "" || (scan.created_at && new Date(scan.created_at).toISOString().split('T')[0] === selectedDate))

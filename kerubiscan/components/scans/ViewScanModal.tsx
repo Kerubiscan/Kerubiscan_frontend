@@ -10,6 +10,7 @@ interface Scan {
   status: string;
   network_zone: string | null;
   scanner_engine: string;
+  target_states?: Record<string, string>;
   created_at?: string;
 }
 
@@ -72,6 +73,29 @@ export function ViewScanModal({ isOpen, onClose, scan }: ViewScanModalProps) {
               </span>
             </div>
           </div>
+
+          {scan.target_states && Object.keys(scan.target_states).length > 0 && (
+            <div className="bg-base rounded-lg p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-text-main flex items-center gap-2 border-b border-border/50 pb-2">
+                <Activity className="w-4 h-4 text-primary" /> Multi-Target Status
+              </h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {Object.entries(scan.target_states).map(([ip, status]) => (
+                  <div key={ip} className="flex items-center justify-between border-b border-border/20 pb-1 last:border-0 last:pb-0">
+                    <span className="text-xs font-mono text-text-muted">{ip}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      status === "COMPLETED" ? "bg-status-success/10 text-status-success" :
+                      status === "FAILED" ? "bg-status-critical/10 text-status-critical" :
+                      status === "IN_PROGRESS" ? "bg-status-warning/10 text-status-warning" :
+                      "bg-status-info/10 text-status-info"
+                    }`}>
+                      {status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
