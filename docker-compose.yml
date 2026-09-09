@@ -10,8 +10,7 @@ services:
     environment:
       # Updated to use Docker network service name for Kimia
       - BACKEND_API_URL=http://api:8000
-    depends_on:
-      - keycloak
+
     networks:
       - kerubiscan-net
 
