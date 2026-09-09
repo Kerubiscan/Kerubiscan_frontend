@@ -15,19 +15,6 @@ services:
     networks:
       - kerubiscan-net
 
-  keycloak:
-    build:
-      context: ./keycloak-theme
-      dockerfile: Dockerfile
-    command: start-dev
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-    ports:
-      - "1990:8080"
-    networks:
-      - kerubiscan-net
-
 networks:
   kerubiscan-net:
     external: true
