@@ -1,13 +1,23 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
 
+const keycloakInternalUrl = process.env.KEYCLOAK_INTERNAL_URL || "http://keycloak:8080";
+const keycloakPublicUrl = process.env.KEYCLOAK_PUBLIC_URL || "http://localhost:1990";
+const realm = process.env.KEYCLOAK_REALM || "kimia";
+
 export const authOptions: AuthOptions = {
   providers: [
     KeycloakProvider({
       clientId: process.env.KEYCLOAK_CLIENT_ID || "kerubiscan-web",
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || "kerubiscan-web-secret",
-      issuer: process.env.KEYCLOAK_ISSUER || "http://127.0.0.1:8080/realms/kimia",
-      authorization: process.env.KEYCLOAK_AUTHORIZATION_URL || "http://127.0.0.1:8080/realms/kimia/protocol/openid-connect/auth",
+      issuer: process.env.KEYCLOAK_ISSUER || `${keycloakPublicUrl}/realms/${realm}`,
+      wellKnown: `${keycloakInternalUrl}/realms/${realm}/.well-known/openid-configuration`,
+      authorization: {
+        url: `${keycloakPublicUrl}/realms/${realm}/protocol/openid-connect/auth`,
+        params: { scope: "openid email profile" },
+      },
+      token: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/token`,
+      userinfo: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/userinfo`,
       httpOptions: {
         timeout: 10000,
       }
