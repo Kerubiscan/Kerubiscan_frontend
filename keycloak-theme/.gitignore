@@ -52,7 +52,8 @@ jspm_packages
 
 /dist
 
-/dist_keycloak
+#/dist_keycloak
+!/dist_keycloak/keycloak-theme-for-kc-22-to-25.jar
 /build
 /storybook-static
 
