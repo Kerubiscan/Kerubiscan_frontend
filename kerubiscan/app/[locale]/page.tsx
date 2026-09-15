@@ -20,6 +20,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     redirect({ href: "/dashboard", locale });
   }
 
+  // Dynamically detect the IP from the request headers
+  const headersList = await import("next/headers").then(m => m.headers());
+  const host = headersList.get("host") || "localhost";
+  const hostIp = host.split(":")[0];
+  const keycloakPublicUrl = process.env.KEYCLOAK_PUBLIC_URL || `http://${hostIp}:1990`;
+  const keycloakConsoleUrl = `${keycloakPublicUrl}/admin/kimia/console/`;
+
   // Admin Gateway
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-base text-text-main relative overflow-hidden">
@@ -40,7 +47,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <a 
-            href="http://localhost:8080/admin/kimia/console/" 
+            href={keycloakConsoleUrl}
             target="_blank" 
             rel="noopener noreferrer"
             className="group p-8 bg-surface/80 backdrop-blur-xl border border-border hover:border-primary/50 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all flex flex-col items-center text-center cursor-pointer hover:-translate-y-1"
