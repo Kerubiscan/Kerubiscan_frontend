@@ -6,7 +6,7 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
   // Use the Host header dynamically if available, otherwise fallback to localhost for server-side checks
   const host = req ? (req.headers.get("host") || "localhost") : "localhost";
   const hostIp = host.split(":")[0];
-  
+
   const keycloakInternalUrl = process.env.KEYCLOAK_INTERNAL_URL || "http://keycloak:8080";
   const keycloakPublicUrl = process.env.KEYCLOAK_PUBLIC_URL || `http://${hostIp}:1990`;
   const realm = process.env.KEYCLOAK_REALM || "kimia";
@@ -48,7 +48,7 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
             }
           }
         }
-        
+
         if (token.expiresAt && Math.floor(Date.now() / 1000) > (token.expiresAt as number)) {
           return { ...token, error: "RefreshAccessTokenError" };
         }
@@ -70,11 +70,9 @@ export const authOptions = getDynamicAuthOptions();
 
 // Export the dynamic handlers for actual browser-based API routes
 export async function GET(req: NextRequest, ctx: any) {
-  const handler = NextAuth(getDynamicAuthOptions(req));
-  return handler(req, ctx);
+  return NextAuth(req, ctx, getDynamicAuthOptions(req));
 }
 
 export async function POST(req: NextRequest, ctx: any) {
-  const handler = NextAuth(getDynamicAuthOptions(req));
-  return handler(req, ctx);
+  return NextAuth(req, ctx, getDynamicAuthOptions(req));
 }
