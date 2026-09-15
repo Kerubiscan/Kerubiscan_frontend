@@ -70,9 +70,11 @@ export const authOptions = getDynamicAuthOptions();
 
 // Export the dynamic handlers for actual browser-based API routes
 export async function GET(req: NextRequest, ctx: any) {
-  return NextAuth(req, ctx, getDynamicAuthOptions(req));
+  const handler = NextAuth(getDynamicAuthOptions(req));
+  return handler(req, ctx);
 }
 
 export async function POST(req: NextRequest, ctx: any) {
-  return NextAuth(req, ctx, getDynamicAuthOptions(req));
+  const handler = NextAuth(getDynamicAuthOptions(req));
+  return handler(req, ctx);
 }
