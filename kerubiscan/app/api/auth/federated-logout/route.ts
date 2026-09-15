@@ -4,8 +4,13 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:9443";
-    const keycloakPublicUrl = process.env.KEYCLOAK_PUBLIC_URL || "http://localhost:1990";
+    // Dynamically detect the IP and port from the incoming Host header
+    const host = req.headers.get("host") || "localhost";
+    const hostIp = host.split(":")[0];
+    
+    // The host header usually includes the port (e.g. 192.168.1.253:9443)
+    const baseUrl = process.env.NEXTAUTH_URL || `http://${host}`;
+    const keycloakPublicUrl = process.env.KEYCLOAK_PUBLIC_URL || `http://${hostIp}:1990`;
     const realm = process.env.KEYCLOAK_REALM || "kimia";
     
     if (session && (session as any).idToken) {
