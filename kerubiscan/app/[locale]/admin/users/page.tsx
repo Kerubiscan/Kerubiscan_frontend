@@ -22,7 +22,7 @@ export default function AdminUsersPage() {
       }
       return `${window.location.protocol}//${window.location.hostname}:1990`;
     }
-    return "http://localhost:1990";
+    return process.env.KEYCLOAK_PUBLIC_URL || process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:1990";
   };
 
   const keycloakBaseUrl = getKeycloakBaseUrl();
