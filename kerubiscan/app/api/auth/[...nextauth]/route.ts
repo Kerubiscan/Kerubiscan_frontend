@@ -19,6 +19,7 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
         type: "oauth",
         version: "2.0",
         checks: ["pkce", "state"],
+        issuer: process.env.KEYCLOAK_ISSUER || `${keycloakInternalUrl}/realms/${realm}`,
         clientId: process.env.KEYCLOAK_CLIENT_ID || "kerubiscan-web",
         clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || "kerubiscan-web-secret",
         authorization: {
