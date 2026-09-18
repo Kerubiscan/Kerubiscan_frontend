@@ -13,20 +13,28 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
 
   return {
     providers: [
-      KeycloakProvider({
+      {
+        id: "keycloak",
+        name: "Keycloak",
+        type: "oauth",
+        version: "2.0",
         clientId: process.env.KEYCLOAK_CLIENT_ID || "kerubiscan-web",
         clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || "kerubiscan-web-secret",
-        // The issuer must match the internal endpoint used for token exchange
-        issuer: process.env.KEYCLOAK_ISSUER || `${keycloakInternalUrl}/realms/${realm}`,
-        wellKnown: `${keycloakInternalUrl}/realms/${realm}/.well-known/openid-configuration`,
         authorization: {
           url: `${keycloakPublicUrl}/realms/${realm}/protocol/openid-connect/auth`,
           params: { scope: "openid email profile" },
         },
         token: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/token`,
         userinfo: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/userinfo`,
-        httpOptions: { timeout: 10000 }
-      }),
+        profile(profile) {
+          return {
+            id: profile.sub,
+            name: profile.name ?? profile.preferred_username,
+            email: profile.email,
+            image: profile.picture,
+          }
+        },
+      }
     ],
     pages: { signIn: '/fr/login' },
     session: { strategy: "jwt", maxAge: 15 * 60 },
