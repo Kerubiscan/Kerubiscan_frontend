@@ -19,7 +19,7 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
         type: "oauth",
         version: "2.0",
         checks: ["pkce", "state"],
-        issuer: process.env.KEYCLOAK_ISSUER || `${keycloakInternalUrl}/realms/${realm}`,
+        issuer: `${keycloakPublicUrl}/realms/${realm}`,
         client: {
           token_endpoint_auth_method: "client_secret_post",
         },
