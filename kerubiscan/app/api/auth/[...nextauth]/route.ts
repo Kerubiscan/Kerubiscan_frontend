@@ -31,6 +31,7 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
         },
         token: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/token`,
         userinfo: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/userinfo`,
+        jwks_endpoint: `${keycloakInternalUrl}/realms/${realm}/protocol/openid-connect/certs`,
         profile(profile) {
           return {
             id: profile.sub,
