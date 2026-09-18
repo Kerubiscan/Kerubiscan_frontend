@@ -19,7 +19,6 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
         type: "oauth",
         version: "2.0",
         checks: ["pkce", "state"],
-        idToken: true,
         clientId: process.env.KEYCLOAK_CLIENT_ID || "kerubiscan-web",
         clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || "kerubiscan-web-secret",
         authorization: {
