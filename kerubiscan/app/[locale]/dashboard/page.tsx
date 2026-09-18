@@ -271,11 +271,11 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col justify-center">
-            <h3 className="text-sm font-semibold mb-6 uppercase">{t("assets.title")}</h3>
-            <div className="space-y-4 flex-1 flex flex-col justify-center">
+          <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
+            <h3 className="text-sm font-semibold mb-6 uppercase shrink-0">{t("assets.title")}</h3>
+            <div className="space-y-4 overflow-y-auto max-h-[200px] pr-2">
               {osData.map((os, i) => (
-                <div key={i} className="flex items-center text-sm">
+                <div key={i} className="flex items-center text-sm shrink-0">
                   <div className="w-20 text-text-muted truncate" title={os.name}>{os.name}</div>
                   <div className="flex-1 px-3">
                     <div className="h-1.5 w-full bg-base rounded-full overflow-hidden">
