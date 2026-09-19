@@ -355,7 +355,7 @@ export default function SchedulingPage() {
                   <button
                     type="button"
                     className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${newSchedule.scan_type === "DISCOVERY" ? "bg-primary/10 border-primary text-primary" : "bg-base border-border text-text-muted hover:border-primary/50"}`}
-                    onClick={() => setNewSchedule({...newSchedule, scan_type: "DISCOVERY"})}
+                    onClick={() => setNewSchedule({...newSchedule, scan_type: "DISCOVERY", scanner_engine: "NMAP"})}
                   >
                     {t("discovery")}
                   </button>
@@ -431,10 +431,17 @@ export default function SchedulingPage() {
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{t("scannerEngineLabel")}</label>
                   <select value={newSchedule.scanner_engine} onChange={e => setNewSchedule({...newSchedule, scanner_engine: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="OPENVAS">OpenVAS</option>
-                    <option value="NMAP">Nmap</option>
-                    <option value="NUCLEI">Nuclei</option>
-                    <option value="NESSUS">Nessus</option>
+                    {newSchedule.scan_type === "DISCOVERY" ? (
+                      <option value="NMAP">Nmap</option>
+                    ) : (
+                      <>
+                        <option value="OPENVAS">OpenVAS</option>
+                        <option value="NMAP">Nmap</option>
+                        <option value="NUCLEI">Nuclei</option>
+                        <option value="NESSUS">Nessus</option>
+                        <option value="OWASP_ZAP">OWASP ZAP</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>

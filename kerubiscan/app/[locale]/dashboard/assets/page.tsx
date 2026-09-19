@@ -54,7 +54,7 @@ export default function AssetsPage() {
   const [addMode, setAddMode] = useState("MANUAL");
   const [discoverySubnet, setDiscoverySubnet] = useState("");
   const [discoveryZone, setDiscoveryZone] = useState("Internal");
-  const [discoveryEngine, setDiscoveryEngine] = useState("OPENVAS");
+  const [discoveryEngine, setDiscoveryEngine] = useState("NMAP");
   const [vulnEngine, setVulnEngine] = useState("OPENVAS");
 
   // Fetch Companies
@@ -705,7 +705,7 @@ export default function AssetsPage() {
 
                       {isDiscoveryEngineDropdownOpen && (
                         <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                          {engineOptions.filter(o => ["OPENVAS", "NMAP"].includes(o.value)).map(o => (
+                          {engineOptions.filter(o => ["NMAP"].includes(o.value)).map(o => (
                             <button
                               type="button"
                               key={o.value}
