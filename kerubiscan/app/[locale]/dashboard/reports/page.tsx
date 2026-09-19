@@ -94,7 +94,28 @@ export default function ReportsPage() {
         method: "POST",
         body: JSON.stringify({ language, instructions: aiInstructions })
       });
-      setAiSummary(res.executive_summary);
+      
+      const taskId = res.task_id;
+      if (!taskId) throw new Error("No task ID returned");
+      
+      toast.info("AI is generating summary... this may take a minute.");
+      
+      let status = "PENDING";
+      let summaryResult = "";
+      while (status === "PENDING" || status === "STARTED" || status === "processing") {
+        await new Promise(r => setTimeout(r, 5000));
+        const taskRes = await fetchApi<any>(`/scans/tasks/${taskId}`);
+        if (taskRes.status === "SUCCESS") {
+          status = "SUCCESS";
+          summaryResult = taskRes.result;
+        } else if (taskRes.status === "FAILURE") {
+          throw new Error("Task failed");
+        } else {
+          status = taskRes.status;
+        }
+      }
+      
+      setAiSummary(summaryResult);
       setIsAiApproved(true);
       toast.success("Summary generated successfully");
     } catch (e) {
