@@ -183,6 +183,7 @@
       "scanTypeLabel": "Type de Scan",
       "discovery": "Découverte Réseau",
       "vulnerability": "Scan de Vulnérabilité",
+      "application": "Scan d'Application",
       "targetLabel": "Cible",
       "targetPlaceholderDiscovery": "10.0.0.0/24",
       "targetPlaceholderVuln": "192.168.1.10 ou 10.0.0.0/24",

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 export default function VulnerabilitiesPage() {
   const t = useTranslations("Pages.vulnerabilities");
+  const locale = useLocale();
 
   const openReportEditor = (vuln: any) => {
     const content = `VULNERABILITY REPORT
@@ -42,7 +43,27 @@ TIMELINE
 First Detected: ${new Date(vuln.first_detected_at).toLocaleString()}
 Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
 `;
-    setReportContent(content);
+
+    let finalContent = content;
+    if (vuln.ai_analysis) {
+      finalContent += `
+AI CONTEXTUAL ANALYSIS
+======================
+Severity Assessment:
+${vuln.ai_analysis.severity_assessment}
+
+Exploitability:
+${vuln.ai_analysis.exploitability}
+
+Business Impact:
+${vuln.ai_analysis.business_impact}
+
+Remediation Steps:
+${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('\n  ') : "None provided."}
+`;
+    }
+
+    setReportContent(finalContent);
     setReportFilename(`Vulnerability_Report_${vuln.cve !== "-" ? vuln.cve : vuln.id}.txt`);
     setIsReportModalOpen(true);
   };
@@ -125,6 +146,9 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
   const [reportContent, setReportContent] = useState("");
   const [reportFilename, setReportFilename] = useState("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  
+  const [isEditingAI, setIsEditingAI] = useState(false);
+  const [editedAiData, setEditedAiData] = useState<any>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -167,17 +191,37 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
     try {
       const res = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/generate-remediation`, {
         method: "POST",
-        body: JSON.stringify({ language: "English" }) 
+        body: JSON.stringify({ language: locale === 'fr' ? 'French' : 'English' }) 
       });
       
-      const aiContent = res.ai_remediation || "";
-      setReportContent(prev => prev + `\n\nAI ANALYSIS & REMEDIATION\n======================\n${aiContent}`);
-      toast?.success?.("AI Analysis added to report!");
+      const aiContent = res.ai_remediation;
+      setSelectedVuln((prev: any) => ({ ...prev, ai_analysis: aiContent }));
+      toast?.success?.("AI Analysis generated successfully!");
     } catch (err) {
       console.error(err);
       toast?.error?.("Failed to generate AI analysis");
     } finally {
       setIsGeneratingAI(false);
+    }
+  };
+
+  const handleSaveAI = async () => {
+    if (!selectedVuln || !editedAiData) return;
+    try {
+      const res = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/ai-analysis`, {
+        method: "PATCH",
+        body: JSON.stringify({ ai_analysis: editedAiData })
+      });
+      setSelectedVuln((prev: any) => ({ ...prev, ai_analysis: res.ai_analysis }));
+      setIsEditingAI(false);
+      
+      // Also update the row in the main table
+      setVulnsData(prev => prev.map(v => v.id === selectedVuln.id ? { ...v, ai_analysis: res.ai_analysis } : v));
+      
+      toast?.success?.("AI Analysis saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast?.error?.("Failed to save AI analysis");
     }
   };
 
@@ -199,7 +243,8 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
       score: vuln.cvss_base_score || "-",
       network_zone: vuln.network_zone || "-",
       ip_address: vuln.ip_address || null,
-      last_scan_raw_output: vuln.last_scan_raw_output || null
+      last_scan_raw_output: vuln.last_scan_raw_output || null,
+      ai_analysis: vuln.ai_analysis || null
     };
   };
 
@@ -683,6 +728,111 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                    <Bot className="w-4 h-4" /> AI Contextual Analysis
+                  </h4>
+                  {selectedVuln.ai_analysis && !isEditingAI && (
+                    <button onClick={() => { setEditedAiData(selectedVuln.ai_analysis); setIsEditingAI(true); }} className="text-xs text-primary hover:underline">
+                      Edit Analysis
+                    </button>
+                  )}
+                </div>
+                
+                {!selectedVuln.ai_analysis && !isGeneratingAI && (
+                  <div className="bg-surface border border-border p-4 rounded-lg flex flex-col items-center justify-center gap-3">
+                    <Bot className="w-8 h-8 text-text-muted opacity-50" />
+                    <p className="text-sm text-text-muted text-center max-w-xs">No AI analysis available for this vulnerability yet.</p>
+                    <button 
+                      onClick={handleAIEnhance}
+                      className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 rounded-lg text-sm transition-colors border border-purple-500/30"
+                    >
+                      Generate Analysis Now
+                    </button>
+                  </div>
+                )}
+
+                {isGeneratingAI && (
+                  <div className="bg-surface border border-border p-6 rounded-lg flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                    <p className="text-sm text-text-muted animate-pulse">AI is analyzing context...</p>
+                  </div>
+                )}
+
+                {selectedVuln.ai_analysis && !isEditingAI && (
+                  <div className="space-y-4 bg-purple-900/10 border border-purple-500/20 p-4 rounded-lg">
+                    <div>
+                      <h5 className="text-xs font-semibold text-purple-300 mb-1">Severity Assessment</h5>
+                      <p className="text-sm text-text-main leading-relaxed">{selectedVuln.ai_analysis.severity_assessment}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h5 className="text-xs font-semibold text-purple-300 mb-1">Exploitability</h5>
+                        <p className="text-sm text-text-main">{selectedVuln.ai_analysis.exploitability}</p>
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-semibold text-purple-300 mb-1">Business Impact</h5>
+                        <p className="text-sm text-text-main">{selectedVuln.ai_analysis.business_impact}</p>
+                      </div>
+                    </div>
+                    {selectedVuln.ai_analysis.remediation_steps && selectedVuln.ai_analysis.remediation_steps.length > 0 && (
+                      <div>
+                        <h5 className="text-xs font-semibold text-purple-300 mb-2">Remediation Steps</h5>
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-text-main">
+                          {selectedVuln.ai_analysis.remediation_steps.map((step: string, i: number) => (
+                            <li key={i}>{step}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {isEditingAI && editedAiData && (
+                  <div className="space-y-4 bg-base p-4 rounded-lg border border-border/50">
+                    <div>
+                      <label className="text-xs font-medium text-text-muted mb-1 block">Severity Assessment</label>
+                      <textarea 
+                        value={editedAiData.severity_assessment || ""}
+                        onChange={(e) => setEditedAiData({...editedAiData, severity_assessment: e.target.value})}
+                        className="w-full bg-surface border border-border rounded p-2 text-sm text-text-main h-24"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-text-muted mb-1 block">Exploitability</label>
+                        <input 
+                          value={editedAiData.exploitability || ""}
+                          onChange={(e) => setEditedAiData({...editedAiData, exploitability: e.target.value})}
+                          className="w-full bg-surface border border-border rounded p-2 text-sm text-text-main"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-text-muted mb-1 block">Business Impact</label>
+                        <input 
+                          value={editedAiData.business_impact || ""}
+                          onChange={(e) => setEditedAiData({...editedAiData, business_impact: e.target.value})}
+                          className="w-full bg-surface border border-border rounded p-2 text-sm text-text-main"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-text-muted mb-1 block">Remediation Steps (one per line)</label>
+                      <textarea 
+                        value={editedAiData.remediation_steps ? editedAiData.remediation_steps.join('\n') : ""}
+                        onChange={(e) => setEditedAiData({...editedAiData, remediation_steps: e.target.value.split('\n').filter((l: string) => l.trim() !== '')})}
+                        className="w-full bg-surface border border-border rounded p-2 text-sm text-text-main h-32"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <button onClick={() => setIsEditingAI(false)} className="px-3 py-1.5 text-sm bg-surface text-text-main hover:bg-base rounded border border-border">Cancel</button>
+                      <button onClick={handleSaveAI} className="px-3 py-1.5 text-sm bg-primary text-white hover:bg-primary-hover rounded">Save Analysis</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold uppercase tracking-wider text-text-muted border-b border-border/50 pb-2">Scanner Description</h4>
                 <p className="text-sm text-text-main leading-relaxed">
@@ -787,17 +937,7 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
               />
             </div>
             
-            <div className="p-6 border-t border-border/50 bg-base/50 rounded-b-xl flex gap-4 justify-between items-center">
-              <div>
-                 <button 
-                   onClick={handleAIEnhance}
-                   disabled={isGeneratingAI}
-                   className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                 >
-                   {isGeneratingAI ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-                   Enhance with AI
-                 </button>
-              </div>
+            <div className="p-6 border-t border-border/50 bg-base/50 rounded-b-xl flex gap-4 justify-end items-center">
               <div className="flex gap-4">
                 <button 
                   onClick={() => setIsReportModalOpen(false)} 

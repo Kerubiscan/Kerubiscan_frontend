@@ -183,6 +183,7 @@
       "scanTypeLabel": "Scan Type",
       "discovery": "Network Discovery",
       "vulnerability": "Vulnerability Scan",
+      "application": "Application Scan",
       "targetLabel": "Target",
       "targetPlaceholderDiscovery": "10.0.0.0/24",
       "targetPlaceholderVuln": "192.168.1.10 or 10.0.0.0/24",

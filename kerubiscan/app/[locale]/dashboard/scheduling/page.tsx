@@ -366,6 +366,13 @@ export default function SchedulingPage() {
                   >
                     {t("vulnerability")}
                   </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${newSchedule.scan_type === "APPLICATION" ? "bg-primary/10 border-primary text-primary" : "bg-base border-border text-text-muted hover:border-primary/50"}`}
+                    onClick={() => setNewSchedule({...newSchedule, scan_type: "APPLICATION"})}
+                  >
+                    {t("application")}
+                  </button>
                 </div>
               </div>
               <div>
