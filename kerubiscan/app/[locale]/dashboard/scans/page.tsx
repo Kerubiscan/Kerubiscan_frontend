@@ -97,6 +97,17 @@ export default function ScansPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (confirm("Are you absolutely sure you want to delete ALL scans? This cannot be undone.")) {
+      try {
+        await fetchApi(`/scans`, { method: "DELETE" });
+        fetchScans();
+      } catch (err: any) {
+        alert(err.message || "Failed to delete all scans.");
+      }
+    }
+  };
+
   const handleDeleteCompany = async (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm(`Are you sure you want to delete company '${name}'? This cannot be undone.`)) {
@@ -227,13 +238,23 @@ export default function ScansPage() {
         description={t("description")}
         action={
           canModify(session as any) ? (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              <Play className="w-4 h-4" fill="currentColor" />
-              {t("newScan")}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDeleteAll}
+                className="flex items-center gap-2 px-4 py-2 bg-status-critical/10 hover:bg-status-critical/20 text-status-critical border border-status-critical/30 rounded-lg text-sm font-medium transition-colors"
+                title="Delete All Scans"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete All
+              </button>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <Play className="w-4 h-4" fill="currentColor" />
+                {t("newScan")}
+              </button>
+            </div>
           ) : undefined
         }
       />
@@ -471,6 +492,7 @@ export default function ScansPage() {
         isOpen={isViewModalOpen}
         onClose={() => { setIsViewModalOpen(false); setSelectedScan(null); }}
         scan={selectedScan}
+        companies={companies}
       />
     </div>
   );

@@ -14,14 +14,22 @@ interface Scan {
   created_at?: string;
 }
 
+interface Company {
+  id: string;
+  name: string;
+}
+
 interface ViewScanModalProps {
   isOpen: boolean;
   onClose: () => void;
   scan: Scan | null;
+  companies?: Company[];
 }
 
-export function ViewScanModal({ isOpen, onClose, scan }: ViewScanModalProps) {
+export function ViewScanModal({ isOpen, onClose, scan, companies = [] }: ViewScanModalProps) {
   if (!isOpen || !scan) return null;
+
+  const companyName = companies.find((c) => c.id === scan.company_id)?.name || scan.company_id;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-background/80 backdrop-blur-sm">
@@ -38,9 +46,9 @@ export function ViewScanModal({ isOpen, onClose, scan }: ViewScanModalProps) {
           <div className="bg-base rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-text-muted flex items-center gap-2">
-                <Fingerprint className="w-4 h-4 text-primary" /> Company ID
+                <Fingerprint className="w-4 h-4 text-primary" /> Company
               </span>
-              <span className="text-sm font-medium text-text-main">{scan.company_id}</span>
+              <span className="text-sm font-medium text-text-main">{companyName}</span>
             </div>
             
             <div className="flex items-center justify-between">
