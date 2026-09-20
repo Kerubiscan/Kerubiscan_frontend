@@ -99,12 +99,14 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
   const [companyFilter, setCompanyFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [zoneFilter, setZoneFilter] = useState("All");
+  const [assetFilter, setAssetFilter] = useState("All");
   const [sortFilter, setSortFilter] = useState("Date (Newest)");
   
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isSeverityDropdownOpen, setIsSeverityDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
+  const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
 
   const [vulnsData, setVulnsData] = useState<any[]>([]);
@@ -321,7 +323,8 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
         const prefix = filterSubnet.replace(".0/24", "");
         matchZone = !!enriched.ip_address?.startsWith(prefix) && (enriched.network_zone === filterZone || (!enriched.network_zone && filterZone === "Unassigned"));
       }
-      return matchSeverity && matchCompany && matchStatus && matchZone;
+      const matchAsset = assetFilter === "All" || enriched.target === assetFilter;
+      return matchSeverity && matchCompany && matchStatus && matchZone && matchAsset;
     });
     
     // Apply Sorting
@@ -330,8 +333,6 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
         return new Date(b.first_detected_at).getTime() - new Date(a.first_detected_at).getTime();
       } else if (sortFilter === "Date (Oldest)") {
         return new Date(a.first_detected_at).getTime() - new Date(b.first_detected_at).getTime();
-      } else if (sortFilter === "Severity (Highest)") {
-        return (b.cvss_base_score || 0) - (a.cvss_base_score || 0);
       } else if (sortFilter === "Severity (Lowest)") {
         return (a.cvss_base_score || 0) - (b.cvss_base_score || 0);
       }
@@ -339,11 +340,20 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
     });
     
     return filtered;
-  }, [severityFilter, companyFilter, statusFilter, zoneFilter, sortFilter, vulnsData, assetsData, companiesData]);
+  }, [severityFilter, companyFilter, statusFilter, zoneFilter, assetFilter, sortFilter, vulnsData, assetsData, companiesData]);
 
   const companiesList = ["All", ...companiesData.map(c => c.name)];
   const severities = ["All", "Critical", "High", "Medium", "Low", "Info"];
   const statuses = ["All", "New", "In Progress", "Risk Accepted", "Fixed", "False Positive"];
+  
+  const uniqueAssets = useMemo(() => {
+    const assets = new Set<string>();
+    vulnsData.forEach(item => {
+      const enriched = enrichVuln(item);
+      assets.add(enriched.target);
+    });
+    return ["All", ...Array.from(assets)];
+  }, [vulnsData]);
   
   const dynamicSubnets = useMemo(() => {
     const map = new Map<string, string>();
@@ -477,12 +487,19 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
                 {statuses.map(opt => (
                   <button
                     key={opt}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors flex items-center ${statusFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
                     onClick={() => {
                       setStatusFilter(opt);
                       setIsStatusDropdownOpen(false);
                     }}
                   >
-                    {opt === "All" ? t("allStatuses") : getStatusTranslation(opt)}
+                    {opt === "All" ? t("allStatuses") : (
+                      <StatusBadge status={
+                        opt === "New" ? "critical" : 
+                        opt === "In Progress" ? "warning" : 
+                        opt === "Fixed" ? "success" : "info"
+                      } label={getStatusTranslation(opt)} />
+                    )}
                   </button>
                 ))}
               </div>
@@ -513,7 +530,7 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
 
             {isSortDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                {["Date (Newest)", "Date (Oldest)", "Severity (Highest)", "Severity (Lowest)"].map(opt => (
+                {["Date (Newest)", "Date (Oldest)", "Severity (Lowest)"].map(opt => (
                   <button
                     key={opt}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${sortFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
@@ -572,6 +589,46 @@ Last Seen: ${new Date(vuln.last_seen_at).toLocaleString()}
                     }}
                   >
                     {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">Asset</label>
+          <div 
+            className="relative" 
+            tabIndex={0} 
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setIsAssetDropdownOpen(false);
+              }
+            }}
+          >
+            <button
+              onClick={() => setIsAssetDropdownOpen(!isAssetDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
+            >
+              <span className="truncate pr-2">
+                {assetFilter === "All" ? "All Assets" : assetFilter.split(" (")[0]}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isAssetDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isAssetDropdownOpen && (
+              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                {uniqueAssets.map(opt => (
+                  <button
+                    key={opt}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${assetFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    onClick={() => {
+                      setAssetFilter(opt);
+                      setIsAssetDropdownOpen(false);
+                    }}
+                  >
+                    {opt === "All" ? "All Assets" : opt.split(" (")[0]}
                   </button>
                 ))}
               </div>
