@@ -760,10 +760,12 @@ export default function AssetsPage() {
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-xl uppercase">
-                    {selectedAsset.name.substring(0, 2)}
+                    {(selectedAsset.name && selectedAsset.name.startsWith("Auto-added Host") ? selectedAsset.ip_address : selectedAsset.name).substring(0, 2)}
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold">{selectedAsset.name}</h4>
+                    <h4 className="text-lg font-bold">
+                      {selectedAsset.name && selectedAsset.name.startsWith("Auto-added Host") ? selectedAsset.ip_address : selectedAsset.name}
+                    </h4>
                     <p className="text-sm text-text-muted">{selectedAsset.ip_address}</p>
                   </div>
                 </div>
@@ -794,6 +796,10 @@ export default function AssetsPage() {
                   <div className="bg-base p-3 rounded-lg border border-border/50 col-span-2">
                     <p className="text-xs text-text-muted mb-1">Open Ports</p>
                     <p className="font-medium text-sm break-all">{selectedAsset.ports || "None detected"}</p>
+                  </div>
+                  <div className="bg-base p-3 rounded-lg border border-border/50 col-span-2">
+                    <p className="text-xs text-text-muted mb-1">Running Services & Versions</p>
+                    <p className="font-medium text-sm break-all whitespace-pre-wrap">{selectedAsset.services || "None detected"}</p>
                   </div>
                 </div>
               </div>
