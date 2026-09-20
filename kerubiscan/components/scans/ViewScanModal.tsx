@@ -52,10 +52,12 @@ export function ViewScanModal({ isOpen, onClose, scan, companies = [] }: ViewSca
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-sm text-text-muted flex items-center gap-2">
-                <Server className="w-4 h-4 text-primary" /> Target
+              <span className="text-sm text-text-muted flex items-center gap-2 whitespace-nowrap">
+                <Server className="w-4 h-4 text-primary shrink-0" /> Target
               </span>
-              <span className="text-sm font-medium text-text-main">{scan.target}</span>
+              <span className="text-sm font-medium text-text-main break-all text-right ml-4">
+                {scan.target.includes(',') ? `${scan.target.split(',').length} Targets (See below)` : scan.target}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
