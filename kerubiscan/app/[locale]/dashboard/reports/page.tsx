@@ -115,7 +115,26 @@ export default function ReportsPage() {
   };
 
   const columns = [
-    { header: t("targetCol"), accessor: "target" as const, className: "font-medium" },
+    { 
+      header: t("targetCol"), 
+      className: "font-medium",
+      accessor: (row: any) => {
+        if (row.target && row.target.includes(",")) {
+          const count = row.target.split(",").length;
+          return (
+            <div className="flex items-center gap-2">
+              <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                {count} Targets
+              </span>
+              <span className="text-xs text-text-muted truncate max-w-[120px]" title={row.target}>
+                {row.target}
+              </span>
+            </div>
+          );
+        }
+        return row.target;
+      }
+    },
     { 
       header: "Company", 
       accessor: (row: any) => {
