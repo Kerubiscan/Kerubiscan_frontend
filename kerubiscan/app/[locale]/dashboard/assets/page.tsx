@@ -199,7 +199,16 @@ export default function AssetsPage() {
   };
 
   const columns = [
-    { header: t("hostnameCol"), accessor: "name" as const, className: "font-medium" },
+    { 
+      header: t("hostnameCol"), 
+      accessor: (row: any) => {
+        if (row.name && row.name.startsWith("Auto-added Host")) {
+          return row.ip_address;
+        }
+        return row.name;
+      }, 
+      className: "font-medium" 
+    },
     { header: t("ipAddressCol"), accessor: "ip_address" as const, className: "text-text-muted" },
     { header: t("osCol"), accessor: (row: any) => row.operating_system || "-", className: "" },
     { 
