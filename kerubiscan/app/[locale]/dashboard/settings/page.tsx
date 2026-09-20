@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Save, ChevronDown } from "lucide-react";
+import { Save, ChevronDown, RefreshCw } from "lucide-react";
+import { fetchApi } from "@/lib/api";
 
 export default function SettingsPage() {
   const t = useTranslations("Pages.settings");
@@ -13,6 +14,8 @@ export default function SettingsPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
   const [isAiDropdownOpen, setIsAiDropdownOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const savedAi = localStorage.getItem("kerubiscan_default_ai");
@@ -26,6 +29,24 @@ export default function SettingsPage() {
     localStorage.setItem("kerubiscan_default_scanner", defaultScanner);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
+  };
+
+  const handleUpdateScanner = async (engine: string) => {
+    setIsUpdating(engine);
+    setUpdateMessage(null);
+    try {
+      await fetchApi("/scans/scanners/update", {
+        method: "POST",
+        body: JSON.stringify({ engine })
+      });
+      setUpdateMessage(`${engine} update started in the background.`);
+    } catch (err) {
+      console.error(err);
+      setUpdateMessage(`Failed to trigger ${engine} update.`);
+    } finally {
+      setIsUpdating(null);
+      setTimeout(() => setUpdateMessage(null), 3000);
+    }
   };
 
   return (
@@ -124,6 +145,53 @@ export default function SettingsPage() {
               </span>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-surface border border-border rounded-xl p-6 mt-6">
+        <h3 className="text-lg font-medium text-white mb-4">Scanner Updates</h3>
+        <p className="text-text-muted text-sm mb-6">Manually trigger database and template updates for local scanners (Nmap, Nuclei, ZAP).</p>
+        
+        <div className="space-y-4 max-w-2xl">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => handleUpdateScanner("ALL")}
+              disabled={isUpdating !== null}
+              className="flex-1 px-4 py-2 flex justify-center items-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isUpdating === "ALL" ? "animate-spin" : ""}`} />
+              Update All Scanners
+            </button>
+            <button 
+              onClick={() => handleUpdateScanner("NMAP")}
+              disabled={isUpdating !== null}
+              className="flex-1 px-4 py-2 flex justify-center items-center gap-2 bg-base border border-border hover:bg-base-light disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isUpdating === "NMAP" ? "animate-spin" : ""}`} />
+              Update Nmap
+            </button>
+            <button 
+              onClick={() => handleUpdateScanner("NUCLEI")}
+              disabled={isUpdating !== null}
+              className="flex-1 px-4 py-2 flex justify-center items-center gap-2 bg-base border border-border hover:bg-base-light disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isUpdating === "NUCLEI" ? "animate-spin" : ""}`} />
+              Update Nuclei
+            </button>
+            <button 
+              onClick={() => handleUpdateScanner("ZAP")}
+              disabled={isUpdating !== null}
+              className="flex-1 px-4 py-2 flex justify-center items-center gap-2 bg-base border border-border hover:bg-base-light disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isUpdating === "ZAP" ? "animate-spin" : ""}`} />
+              Update ZAP
+            </button>
+          </div>
+          {updateMessage && (
+            <div className="text-status-success text-sm font-medium animate-in fade-in">
+              {updateMessage}
+            </div>
+          )}
         </div>
       </div>
     </div>
