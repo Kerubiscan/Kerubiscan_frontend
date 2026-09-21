@@ -445,7 +445,6 @@ export default function SchedulingPage() {
                         <option value="OPENVAS">OpenVAS</option>
                         <option value="NMAP">Nmap</option>
                         <option value="NUCLEI">Nuclei</option>
-                        <option value="NESSUS">Nessus</option>
                         <option value="OWASP_ZAP">OWASP ZAP</option>
                       </>
                     )}

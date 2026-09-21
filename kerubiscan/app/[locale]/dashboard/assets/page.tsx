@@ -335,8 +335,7 @@ export default function AssetsPage() {
   const engineOptions = [
     { value: "OPENVAS", label: "OpenVAS" },
     { value: "NMAP", label: "Nmap" },
-    { value: "NUCLEI", label: "Nuclei" },
-    { value: "NESSUS", label: "Nessus" }
+    { value: "NUCLEI", label: "Nuclei" }
   ];
 
   return (

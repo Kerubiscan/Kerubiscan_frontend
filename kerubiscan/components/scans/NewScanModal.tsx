@@ -45,8 +45,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
     { value: "OPENVAS", label: "OpenVAS" },
     { value: "NMAP", label: "Nmap" },
     { value: "NUCLEI", label: "Nuclei" },
-    { value: "OWASP_ZAP", label: "OWASP ZAP" },
-    { value: "NESSUS", label: "Nessus" },
+    { value: "OWASP_ZAP", label: "OWASP ZAP" }
   ];
 
   if (!isOpen) return null;

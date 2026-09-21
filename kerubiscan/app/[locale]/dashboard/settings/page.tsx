@@ -75,7 +75,7 @@ export default function SettingsPage() {
                   onClick={() => setIsScannerDropdownOpen(!isScannerDropdownOpen)}
                   className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
                 >
-                  <span>{defaultScanner === "OPENVAS" ? "OpenVAS" : defaultScanner === "NMAP" ? "Nmap" : defaultScanner === "NUCLEI" ? "Nuclei" : "Nessus"}</span>
+                  <span>{defaultScanner === "OPENVAS" ? "OpenVAS" : defaultScanner === "NMAP" ? "Nmap" : "Nuclei"}</span>
                   <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isScannerDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isScannerDropdownOpen && (
@@ -83,8 +83,7 @@ export default function SettingsPage() {
                     {[
                       { value: "OPENVAS", label: "OpenVAS" },
                       { value: "NMAP", label: "Nmap" },
-                      { value: "NUCLEI", label: "Nuclei" },
-                      { value: "NESSUS", label: "Nessus" }
+                      { value: "NUCLEI", label: "Nuclei" }
                     ].map(opt => (
                       <button
                         key={opt.value}

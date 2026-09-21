@@ -34,8 +34,7 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
   const scannerOptions = [
     { value: "OPENVAS", label: "OpenVAS" },
     { value: "NMAP", label: "Nmap" },
-    { value: "NUCLEI", label: "Nuclei" },
-    { value: "NESSUS", label: "Nessus" },
+    { value: "NUCLEI", label: "Nuclei" }
   ];
 
   useEffect(() => {
