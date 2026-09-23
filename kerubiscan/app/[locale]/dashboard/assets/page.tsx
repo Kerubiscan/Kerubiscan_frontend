@@ -335,8 +335,12 @@ export default function AssetsPage() {
   const engineOptions = [
     { value: "OPENVAS", label: "OpenVAS" },
     { value: "NMAP", label: "Nmap" },
-    { value: "NUCLEI", label: "Nuclei" }
+    { value: "NUCLEI", label: "Nuclei" },
+    { value: "OWASP_ZAP", label: "OWASP ZAP" }
   ];
+
+  // Discovery scans only support Nmap (network ping sweep)
+  const discoveryEngineOptions = engineOptions.filter(o => o.value === "NMAP");
 
   return (
     <div className="pb-6">
@@ -713,7 +717,7 @@ export default function AssetsPage() {
 
                       {isDiscoveryEngineDropdownOpen && (
                         <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                          {engineOptions.filter(o => ["NMAP"].includes(o.value)).map(o => (
+                          {discoveryEngineOptions.map(o => (
                             <button
                               type="button"
                               key={o.value}

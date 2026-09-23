@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ChevronDown, Eye, X, Loader2, Download, Bot } from "lucide-react";
+import { ChevronDown, Eye, X, Loader2, Download, Bot, Trash2 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -225,6 +225,31 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     }
   };
 
+  const handleDeleteVuln = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this vulnerability?")) return;
+    try {
+      await fetchApi(`/vulnerabilities/${id}`, { method: "DELETE" });
+      setVulnsData(prev => prev.filter(v => v.id !== id));
+      toast?.success?.("Vulnerability deleted");
+    } catch (err) {
+      console.error(err);
+      toast?.error?.("Failed to delete vulnerability");
+    }
+  };
+
+  const handleDeleteAllVulns = async () => {
+    if (!confirm("Are you sure you want to delete ALL vulnerabilities? This cannot be undone.")) return;
+    try {
+      await fetchApi("/vulnerabilities", { method: "DELETE" });
+      setVulnsData([]);
+      toast?.success?.("All vulnerabilities deleted");
+    } catch (err) {
+      console.error(err);
+      toast?.error?.("Failed to delete vulnerabilities");
+    }
+  };
+
   const enrichVuln = (vuln: any) => {
     // ip_address, asset_name, company_id, network_zone are now embedded directly
     // by the backend join — no client-side cross-reference needed
@@ -328,30 +353,39 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     {
       header: t("actionsCol"),
       accessor: (row: any) => (
-        <button 
-          onClick={async (e) => { 
-            e.stopPropagation(); 
-            const enriched = enrichVuln(row);
-            setSelectedVuln(enriched); 
-            setIsViewModalOpen(true); 
-            
-            // Fetch history
-            setHistoryLoading(true);
-            try {
-              const res = await fetchApi<any[]>(`/vulnerabilities/${row.id}/history`);
-              setHistoryData(res || []);
-            } catch (err) {
-              console.error("Failed to load history", err);
-              setHistoryData([]);
-            } finally {
-              setHistoryLoading(false);
-            }
-          }}
-          className="p-1 text-text-muted hover:text-primary transition-colors"
-          title="View Details"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={async (e) => { 
+              e.stopPropagation(); 
+              const enriched = enrichVuln(row);
+              setSelectedVuln(enriched); 
+              setIsViewModalOpen(true); 
+              
+              // Fetch history
+              setHistoryLoading(true);
+              try {
+                const res = await fetchApi<any[]>(`/vulnerabilities/${row.id}/history`);
+                setHistoryData(res || []);
+              } catch (err) {
+                console.error("Failed to load history", err);
+                setHistoryData([]);
+              } finally {
+                setHistoryLoading(false);
+              }
+            }}
+            className="p-1 text-text-muted hover:text-primary transition-colors"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={(e) => handleDeleteVuln(row.id, e)}
+            className="p-1 text-text-muted hover:text-critical transition-colors"
+            title="Delete Vulnerability"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       )
     }
   ];
@@ -423,6 +457,15 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
       <PageHeader 
         title={t("title")} 
         description={t("description")} 
+        action={
+          <button 
+            onClick={handleDeleteAllVulns}
+            className="flex items-center gap-2 px-4 py-2 bg-critical text-white rounded-lg hover:bg-critical/80 transition-colors text-sm font-medium shadow-lg shadow-critical/20"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete All
+          </button>
+        }
       />
       
       <div className="mb-6 flex flex-wrap items-center gap-6">

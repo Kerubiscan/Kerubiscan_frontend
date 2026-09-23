@@ -27,9 +27,9 @@ export default function ReportsPage() {
   const [isAiApproved, setIsAiApproved] = useState(false);
   
   useEffect(() => {
-    // Fetch companies for sorting/filtering
-    fetchApi<any>("/companies?size=500").then(data => {
-      setCompanies(data?.items || []);
+    // Fetch companies for sorting/filtering — use /scans/companies which is the registered endpoint
+    fetchApi<any[]>("/scans/companies").then(data => {
+      setCompanies(data || []);
     }).catch(console.error);
 
     fetchApi<any[]>("/scans?status=COMPLETED").then(data => {
@@ -111,7 +111,29 @@ export default function ReportsPage() {
   const handleDownloadHtml = async (scanIdToDownload?: number) => {
     const id = scanIdToDownload || selectedScanId;
     if (!id) return;
-    window.open(`/api/v1/scans/${id}/report/html`, "_blank");
+    try {
+      // Use fetchApi so the Authorization token is included in the request
+      const response = await fetch(`/api/v1/scans/${id}/report/html`, {
+        headers: {
+          Authorization: `Bearer ${(await import("next-auth/react").then(m => m.getSession()))?.accessToken as string ?? ""}`,
+        },
+      });
+      if (!response.ok) {
+        toast.error(`Failed to download report: ${response.status} ${response.statusText}`);
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `report_${id}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Failed to download report");
+    }
   };
 
   const columns = [

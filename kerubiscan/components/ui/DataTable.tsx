@@ -51,7 +51,7 @@ export function DataTable<T>({
   const someSelected = data.some(row => selectedIds.has(String(row[keyField])));
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-base">
+    <div className="overflow-x-auto min-h-[250px] rounded-xl border border-border bg-base">
       <table className="w-full text-left text-sm whitespace-nowrap">
         <thead className="bg-surface/50 border-b border-border">
           <tr>
