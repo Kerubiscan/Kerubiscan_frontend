@@ -17,6 +17,10 @@ COPY . .
 # Next.js telemetry is disabled
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Build-time env vars (needed by next.config.ts rewrites at build time)
+ARG BACKEND_API_URL=http://api:8000
+ENV BACKEND_API_URL=${BACKEND_API_URL}
+
 # Build the standalone output
 RUN npm run build
 
