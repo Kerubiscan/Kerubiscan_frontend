@@ -198,8 +198,35 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
         body: JSON.stringify({ language: resolvedLang, provider }) 
       });
       
-      const aiContent = res.ai_remediation;
-      setSelectedVuln((prev: any) => ({ ...prev, ai_analysis: aiContent }));
+      let aiContent = res.ai_remediation;
+      
+      // If it returns a background task id, poll for completion
+      if (res.task_id) {
+        let status = "PENDING";
+        while (status === "PENDING" || status === "STARTED" || status === "processing") {
+          await new Promise(r => setTimeout(r, 5000));
+          const taskRes = await fetchApi<any>(`/scans/tasks/${res.task_id}`);
+          if (taskRes.status === "SUCCESS") {
+            status = "SUCCESS";
+            aiContent = taskRes.result;
+          } else if (taskRes.status === "FAILURE") {
+            throw new Error("AI Contextual Analysis task failed.");
+          } else {
+            status = taskRes.status;
+          }
+        }
+      }
+      
+      // Save it immediately so it persists
+      if (aiContent) {
+        const updateRes = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/ai-analysis`, {
+          method: "PATCH",
+          body: JSON.stringify({ ai_analysis: aiContent })
+        });
+        setSelectedVuln((prev: any) => ({ ...prev, ai_analysis: updateRes.ai_analysis }));
+        setVulnsData(prev => prev.map(v => v.id === selectedVuln.id ? { ...v, ai_analysis: updateRes.ai_analysis } : v));
+      }
+      
       toast?.success?.("AI Analysis generated successfully!");
     } catch (err) {
       console.error(err);
