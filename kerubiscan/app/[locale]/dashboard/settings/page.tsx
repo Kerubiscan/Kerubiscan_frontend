@@ -11,22 +11,27 @@ export default function SettingsPage() {
   
   const [defaultAi, setDefaultAi] = useState("ollama");
   const [defaultScanner, setDefaultScanner] = useState("OPENVAS");
+  const [defaultLanguage, setDefaultLanguage] = useState("French");
   const [isSaved, setIsSaved] = useState(false);
   const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
   const [isAiDropdownOpen, setIsAiDropdownOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const savedAi = localStorage.getItem("kerubiscan_default_ai");
     const savedScanner = localStorage.getItem("kerubiscan_default_scanner");
+    const savedLanguage = localStorage.getItem("kerubiscan_default_language");
     if (savedAi) setDefaultAi(savedAi);
     if (savedScanner) setDefaultScanner(savedScanner);
+    if (savedLanguage) setDefaultLanguage(savedLanguage);
   }, []);
 
   const handleSave = () => {
     localStorage.setItem("kerubiscan_default_ai", defaultAi);
     localStorage.setItem("kerubiscan_default_scanner", defaultScanner);
+    localStorage.setItem("kerubiscan_default_language", defaultLanguage);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
@@ -60,8 +65,8 @@ export default function SettingsPage() {
         <h3 className="text-lg font-medium text-white mb-4">{t("scannerConfigTitle")}</h3>
         <p className="text-text-muted text-sm mb-6">{t("scannerConfigDesc")}</p>
         
-        <div className="space-y-6 max-w-2xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6 max-w-3xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-text-muted mb-2">{t("defaultScannerLabel")}</label>
               <div 
@@ -110,20 +115,53 @@ export default function SettingsPage() {
                   onClick={() => setIsAiDropdownOpen(!isAiDropdownOpen)}
                   className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
                 >
-                  <span>{defaultAi === "ollama" ? "Ollama (Local)" : defaultAi === "gemini" ? "Gemini (Cloud)" : "OpenAI (Cloud)"}</span>
+                  <span>{defaultAi === "ollama" ? "Ollama (Local)" : "Gemini (Cloud)"}</span>
                   <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isAiDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isAiDropdownOpen && (
                   <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in">
                     {[
                       { value: "ollama", label: "Ollama (Local)" },
-                      { value: "gemini", label: "Gemini (Cloud)" },
-                      { value: "openai", label: "OpenAI (Cloud)" }
+                      { value: "gemini", label: "Gemini (Cloud)" }
                     ].map(opt => (
                       <button
                         key={opt.value}
                         className={`w-full text-left px-4 py-2 text-sm hover:bg-base transition-colors ${defaultAi === opt.value ? "bg-primary/10 text-primary" : "text-white"}`}
                         onClick={() => { setDefaultAi(opt.value); setIsAiDropdownOpen(false); }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-muted mb-2">Default Language</label>
+              <div 
+                className="relative" 
+                tabIndex={0} 
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsLanguageDropdownOpen(false);
+                }}
+              >
+                <button
+                  onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                  className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
+                >
+                  <span>{defaultLanguage === "French" ? "Français" : "English"}</span>
+                  <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isLanguageDropdownOpen && (
+                  <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in">
+                    {[
+                      { value: "French", label: "Français" },
+                      { value: "English", label: "English" }
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-base transition-colors ${defaultLanguage === opt.value ? "bg-primary/10 text-primary" : "text-white"}`}
+                        onClick={() => { setDefaultLanguage(opt.value); setIsLanguageDropdownOpen(false); }}
                       >
                         {opt.label}
                       </button>

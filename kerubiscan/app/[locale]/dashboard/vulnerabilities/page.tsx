@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ChevronDown, Eye, X, Loader2, Download, Bot, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, X, Loader2, Download, Bot, Trash2, RefreshCw } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -190,10 +190,12 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     setIsGeneratingAI(true);
     try {
       const provider = localStorage.getItem("kerubiscan_default_ai") || "ollama";
+      const defaultLang = localStorage.getItem("kerubiscan_default_language");
+      const resolvedLang = defaultLang ? defaultLang : (locale === 'fr' ? 'French' : 'English');
       
       const res = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/generate-remediation`, {
         method: "POST",
-        body: JSON.stringify({ language: locale === 'fr' ? 'French' : 'English', provider }) 
+        body: JSON.stringify({ language: resolvedLang, provider }) 
       });
       
       const aiContent = res.ai_remediation;
@@ -790,9 +792,14 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
                     <Bot className="w-4 h-4" /> AI Contextual Analysis
                   </h4>
                   {selectedVuln.ai_analysis && !isEditingAI && (
-                    <button onClick={() => { setEditedAiData(selectedVuln.ai_analysis); setIsEditingAI(true); }} className="text-xs text-primary hover:underline">
-                      Edit Analysis
-                    </button>
+                    <div className="flex items-center gap-4">
+                      <button onClick={handleAIEnhance} disabled={isGeneratingAI} className="text-xs text-text-muted hover:text-purple-400 flex items-center gap-1 transition-colors">
+                        <RefreshCw className={`w-3 h-3 ${isGeneratingAI ? 'animate-spin' : ''}`} /> Retry AI
+                      </button>
+                      <button onClick={() => { setEditedAiData(selectedVuln.ai_analysis); setIsEditingAI(true); }} className="text-xs text-primary hover:underline flex items-center gap-1">
+                        Edit Analysis
+                      </button>
+                    </div>
                   )}
                 </div>
                 

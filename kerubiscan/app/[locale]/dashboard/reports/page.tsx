@@ -40,6 +40,9 @@ export default function ReportsPage() {
         setIsAiApproved(!!data[0].executive_summary);
       }
     }).catch(console.error);
+    
+    const savedLang = localStorage.getItem("kerubiscan_default_language");
+    if (savedLang) setLanguage(savedLang);
   }, []);
 
   const selectedScan = scans.find(s => s.id === selectedScanId);
