@@ -368,7 +368,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
                   <button 
                     key={s} 
                     onClick={() => updateStatus(row.id, s)}
-                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-base transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-xs text-text-main hover:bg-base transition-colors"
                   >
                     {getStatusTranslation(s)}
                   </button>
