@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
-import { Download, ChevronDown, Bot, FileText, Check, Loader2, Save } from "lucide-react";
+import { Download, ChevronDown, Bot, FileText, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -141,6 +141,34 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDeleteReport = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this report and its scan?")) return;
+    try {
+      await fetchApi(`/scans/${id}`, { method: "DELETE" });
+      setScans(prev => prev.filter(s => s.id !== id));
+      if (selectedScanId === id) {
+        setSelectedScanId(null);
+        setAiSummary("");
+      }
+      toast.success("Report deleted successfully");
+    } catch (e) {
+      toast.error("Failed to delete report");
+    }
+  };
+
+  const handleDeleteAllReports = async () => {
+    if (!confirm("Are you sure you want to delete ALL reports? This action cannot be undone.")) return;
+    try {
+      await Promise.all(filteredScans.map(s => fetchApi(`/scans/${s.id}`, { method: "DELETE" })));
+      setScans(prev => prev.filter(s => !filteredScans.some(fs => fs.id === s.id)));
+      setSelectedScanId(null);
+      setAiSummary("");
+      toast.success("All reports deleted successfully");
+    } catch (e) {
+      toast.error("Failed to delete all reports");
+    }
+  };
+
   const columns = [
     { 
       header: t("targetCol"), 
@@ -177,13 +205,21 @@ export default function ReportsPage() {
     { 
       header: t("actionCol"), 
       accessor: (row: any) => (
-        <button 
-          onClick={() => handleDownloadHtml(row.id)}
-          disabled={row.status !== "COMPLETED"}
-          className={`flex items-center gap-1 transition-colors ${row.status === "COMPLETED" ? "text-primary hover:text-primary-hover" : "text-gray-400 cursor-not-allowed"}`}
-        >
-          <Download className="w-4 h-4" /> {t("downloadAction")}
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => handleDownloadHtml(row.id)}
+            disabled={row.status !== "COMPLETED"}
+            className={`flex items-center gap-1 transition-colors ${row.status === "COMPLETED" ? "text-primary hover:text-primary-hover" : "text-gray-400 cursor-not-allowed"}`}
+          >
+            <Download className="w-4 h-4" /> {t("downloadAction")}
+          </button>
+          <button 
+            onClick={() => handleDeleteReport(row.id)}
+            className="flex items-center gap-1 text-critical hover:text-critical/80 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" /> Delete
+          </button>
+        </div>
       )
     },
   ];
@@ -194,14 +230,24 @@ export default function ReportsPage() {
         title={t("title")} 
         description={t("description")} 
         action={
-          <button 
-            onClick={() => handleDownloadHtml()} 
-            disabled={!selectedScanId || selectedScan?.status !== "COMPLETED"}
-            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover disabled:bg-primary/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            <FileText className="w-4 h-4" />
-            Download HTML
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handleDeleteAllReports}
+              disabled={filteredScans.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-critical hover:bg-critical/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-critical/20"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete All
+            </button>
+            <button 
+              onClick={() => handleDownloadHtml()} 
+              disabled={!selectedScanId || selectedScan?.status !== "COMPLETED"}
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover disabled:bg-primary/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              Download HTML
+            </button>
+          </div>
         }
       />
 

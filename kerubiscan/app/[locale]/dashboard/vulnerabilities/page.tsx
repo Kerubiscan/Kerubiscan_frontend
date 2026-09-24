@@ -119,14 +119,12 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
   const [severityFilter, setSeverityFilter] = useState("All");
   const [companyFilter, setCompanyFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [zoneFilter, setZoneFilter] = useState("All");
   const [assetFilter, setAssetFilter] = useState("All");
   const [sortFilter, setSortFilter] = useState("Severity (Highest)");
   
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isSeverityDropdownOpen, setIsSeverityDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
   const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
 
@@ -432,14 +430,8 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
       const matchSeverity = severityFilter === "All" || enriched.severity === severityFilter;
       const matchCompany = companyFilter === "All" || enriched.company === companyFilter;
       const matchStatus = statusFilter === "All" || enriched.status === statusFilter;
-      let matchZone = true;
-      if (zoneFilter !== "All") {
-        const [filterSubnet, filterZone] = zoneFilter.split('|');
-        const prefix = filterSubnet.replace(".0/24", "");
-        matchZone = !!enriched.ip_address?.startsWith(prefix) && (enriched.network_zone === filterZone || (!enriched.network_zone && filterZone === "Unassigned"));
-      }
       const matchAsset = assetFilter === "All" || enriched.target === assetFilter;
-      return matchSeverity && matchCompany && matchStatus && matchZone && matchAsset;
+      return matchSeverity && matchCompany && matchStatus && matchAsset;
     });
     
     // Apply Sorting
@@ -461,7 +453,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     });
     
     return filtered;
-  }, [severityFilter, companyFilter, statusFilter, zoneFilter, assetFilter, sortFilter, vulnsData, assetsData, companiesData]);
+  }, [severityFilter, companyFilter, statusFilter, assetFilter, sortFilter, vulnsData, assetsData, companiesData]);
 
   const companiesList = ["All", ...companiesData.map(c => c.name)];
   const severities = ["All", "Critical", "High", "Medium", "Low", "Info"];
@@ -476,23 +468,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     return ["All", ...Array.from(assets)];
   }, [vulnsData]);
   
-  const dynamicSubnets = useMemo(() => {
-    const map = new Map<string, string>();
-    assetsData.forEach(item => {
-      if (item.ip_address) {
-        const parts = item.ip_address.split('.');
-        if (parts.length === 4) {
-          const prefix = `${parts[0]}.${parts[1]}.${parts[2]}`;
-          const subnet = `${prefix}.0/24`;
-          const zone = item.network_zone || "Unassigned";
-          const val = `${subnet}|${zone}`;
-          const label = `${subnet} (${getZoneTranslation(zone)})`;
-          map.set(val, label);
-        }
-      }
-    });
-    return Array.from(map.entries());
-  }, [assetsData]);
+
 
   return (
     <div className="pb-6">
@@ -677,54 +653,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-text-muted font-medium">{t("networkZoneLabel")}</label>
-          <div 
-            className="relative" 
-            tabIndex={0} 
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setIsZoneDropdownOpen(false);
-              }
-            }}
-          >
-            <button
-              onClick={() => setIsZoneDropdownOpen(!isZoneDropdownOpen)}
-              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
-            >
-              <span className="truncate pr-2">
-                {zoneFilter === "All" ? t("allZones") : dynamicSubnets.find(([v]) => v === zoneFilter)?.[1] || zoneFilter}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isZoneDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
 
-            {isZoneDropdownOpen && (
-              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                <button
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${zoneFilter === "All" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
-                  onClick={() => {
-                    setZoneFilter("All");
-                    setIsZoneDropdownOpen(false);
-                  }}
-                >
-                  {t("allZones")}
-                </button>
-                {dynamicSubnets.map(([val, label]) => (
-                  <button
-                    key={val}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${zoneFilter === val ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
-                    onClick={() => {
-                      setZoneFilter(val);
-                      setIsZoneDropdownOpen(false);
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">Asset</label>
