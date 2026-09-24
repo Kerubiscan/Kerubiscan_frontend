@@ -120,12 +120,14 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
   const [companyFilter, setCompanyFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [assetFilter, setAssetFilter] = useState("All");
+  const [scannerFilter, setScannerFilter] = useState("All");
   const [sortFilter, setSortFilter] = useState("Severity (Highest)");
   
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isSeverityDropdownOpen, setIsSeverityDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
+  const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
 
   const [vulnsData, setVulnsData] = useState<any[]>([]);
@@ -431,7 +433,8 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
       const matchCompany = companyFilter === "All" || enriched.company === companyFilter;
       const matchStatus = statusFilter === "All" || enriched.status === statusFilter;
       const matchAsset = assetFilter === "All" || enriched.target === assetFilter;
-      return matchSeverity && matchCompany && matchStatus && matchAsset;
+      const matchScanner = scannerFilter === "All" || (enriched.source_engine || "OPENVAS") === scannerFilter;
+      return matchSeverity && matchCompany && matchStatus && matchAsset && matchScanner;
     });
     
     // Apply Sorting
@@ -448,16 +451,21 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
         const weightDiff = getSeverityWeight(a.severity) - getSeverityWeight(b.severity);
         if (weightDiff !== 0) return weightDiff;
         return (a.cvss_base_score || 0) - (b.cvss_base_score || 0);
+      } else if (sortFilter === "Scanner (A-Z)") {
+        const scannerA = (a.source_engine || "OPENVAS").toLowerCase();
+        const scannerB = (b.source_engine || "OPENVAS").toLowerCase();
+        return scannerA.localeCompare(scannerB);
       }
       return 0;
     });
     
     return filtered;
-  }, [severityFilter, companyFilter, statusFilter, assetFilter, sortFilter, vulnsData, assetsData, companiesData]);
+  }, [severityFilter, companyFilter, statusFilter, assetFilter, scannerFilter, sortFilter, vulnsData, assetsData, companiesData]);
 
   const companiesList = ["All", ...companiesData.map(c => c.name)];
   const severities = ["All", "Critical", "High", "Medium", "Low", "Info"];
   const statuses = ["All", "New", "In Progress", "Risk Accepted", "Fixed", "False Positive"];
+  const sortOptions = ["Severity (Highest)", "Severity (Lowest)", "Date (Newest)", "Date (Oldest)", "Scanner (A-Z)"];
   
   const uniqueAssets = useMemo(() => {
     const assets = new Set<string>();
@@ -636,13 +644,53 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
 
             {isSortDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                {["Severity (Highest)", "Severity (Lowest)", "Date (Newest)", "Date (Oldest)"].map(opt => (
+                {sortOptions.map(opt => (
                   <button
                     key={opt}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${sortFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
                     onClick={() => {
                       setSortFilter(opt);
                       setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">Scanner</label>
+          <div 
+            className="relative" 
+            tabIndex={0} 
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setIsScannerDropdownOpen(false);
+              }
+            }}
+          >
+            <button
+              onClick={() => setIsScannerDropdownOpen(!isScannerDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px] w-[160px]"
+            >
+              <span className="truncate pr-2">
+                {scannerFilter}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isScannerDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isScannerDropdownOpen && (
+              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                {["All", "OPENVAS", "NMAP", "NUCLEI", "ZAP", "METASPLOIT"].map(opt => (
+                  <button
+                    key={opt}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors flex items-center ${scannerFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    onClick={() => {
+                      setScannerFilter(opt);
+                      setIsScannerDropdownOpen(false);
                     }}
                   >
                     {opt}
