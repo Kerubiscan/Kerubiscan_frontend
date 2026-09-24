@@ -121,7 +121,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
   const [statusFilter, setStatusFilter] = useState("All");
   const [zoneFilter, setZoneFilter] = useState("All");
   const [assetFilter, setAssetFilter] = useState("All");
-  const [sortFilter, setSortFilter] = useState("Date (Newest)");
+  const [sortFilter, setSortFilter] = useState("Severity (Highest)");
   
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isSeverityDropdownOpen, setIsSeverityDropdownOpen] = useState(false);
@@ -391,6 +391,11 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
   ];
 
   const filteredData = useMemo(() => {
+    const getSeverityWeight = (sev: string) => {
+      const map: Record<string, number> = { "Critical": 5, "High": 4, "Medium": 3, "Low": 2, "Info": 1, "INFO": 1, "LOW": 2, "MEDIUM": 3, "HIGH": 4, "CRITICAL": 5 };
+      return map[sev] || 0;
+    };
+    
     const filtered = vulnsData.filter(item => {
       const enriched = enrichVuln(item);
       const matchSeverity = severityFilter === "All" || enriched.severity === severityFilter;
@@ -412,7 +417,13 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
         return new Date(b.first_detected_at).getTime() - new Date(a.first_detected_at).getTime();
       } else if (sortFilter === "Date (Oldest)") {
         return new Date(a.first_detected_at).getTime() - new Date(b.first_detected_at).getTime();
+      } else if (sortFilter === "Severity (Highest)") {
+        const weightDiff = getSeverityWeight(b.severity) - getSeverityWeight(a.severity);
+        if (weightDiff !== 0) return weightDiff;
+        return (b.cvss_base_score || 0) - (a.cvss_base_score || 0);
       } else if (sortFilter === "Severity (Lowest)") {
+        const weightDiff = getSeverityWeight(a.severity) - getSeverityWeight(b.severity);
+        if (weightDiff !== 0) return weightDiff;
         return (a.cvss_base_score || 0) - (b.cvss_base_score || 0);
       }
       return 0;
@@ -618,7 +629,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
 
             {isSortDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                {["Date (Newest)", "Date (Oldest)", "Severity (Lowest)"].map(opt => (
+                {["Severity (Highest)", "Severity (Lowest)", "Date (Newest)", "Date (Oldest)"].map(opt => (
                   <button
                     key={opt}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${sortFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
