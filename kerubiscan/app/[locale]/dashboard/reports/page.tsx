@@ -56,9 +56,11 @@ export default function ReportsPage() {
     try {
       const url = `/scans/${selectedScanId}/generate-summary`;
         
+      const provider = localStorage.getItem("kerubiscan_default_ai") || "ollama";
+      
       const res = await fetchApi<any>(url, {
         method: "POST",
-        body: JSON.stringify({ language, instructions: aiInstructions })
+        body: JSON.stringify({ language, instructions: aiInstructions, provider })
       });
       
       const taskId = res.task_id;

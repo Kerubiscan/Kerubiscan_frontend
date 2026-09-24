@@ -110,13 +110,14 @@ export default function SettingsPage() {
                   onClick={() => setIsAiDropdownOpen(!isAiDropdownOpen)}
                   className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
                 >
-                  <span>{defaultAi === "ollama" ? "Ollama (Local)" : "OpenAI (Cloud)"}</span>
+                  <span>{defaultAi === "ollama" ? "Ollama (Local)" : defaultAi === "gemini" ? "Gemini (Cloud)" : "OpenAI (Cloud)"}</span>
                   <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isAiDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isAiDropdownOpen && (
                   <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in">
                     {[
                       { value: "ollama", label: "Ollama (Local)" },
+                      { value: "gemini", label: "Gemini (Cloud)" },
                       { value: "openai", label: "OpenAI (Cloud)" }
                     ].map(opt => (
                       <button

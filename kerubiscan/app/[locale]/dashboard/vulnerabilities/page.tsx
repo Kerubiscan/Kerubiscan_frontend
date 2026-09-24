@@ -189,9 +189,11 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     if (!selectedVuln) return;
     setIsGeneratingAI(true);
     try {
+      const provider = localStorage.getItem("kerubiscan_default_ai") || "ollama";
+      
       const res = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/generate-remediation`, {
         method: "POST",
-        body: JSON.stringify({ language: locale === 'fr' ? 'French' : 'English' }) 
+        body: JSON.stringify({ language: locale === 'fr' ? 'French' : 'English', provider }) 
       });
       
       const aiContent = res.ai_remediation;
