@@ -29,6 +29,8 @@ Target Asset: ${vuln.target}
 Company: ${vuln.company}
 Network Zone: ${vuln.network_zone}
 Source Engine: ${vuln.source_engine || "OPENVAS"}
+Port: ${vuln.port || "N/A"}
+Service: ${vuln.service || "N/A"}
 
 DESCRIPTION
 ======================
@@ -786,6 +788,8 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
                   <p className="text-xs text-text-muted">Network Zone: <span className="font-medium text-text-main">{selectedVuln.network_zone}</span></p>
                   <p className="text-xs text-text-muted">Company: <span className="font-medium text-text-main">{selectedVuln.company}</span></p>
                   <p className="text-xs text-text-muted">Source Engine: <span className="font-medium text-text-main">{selectedVuln.source_engine || "OPENVAS"}</span></p>
+                  <p className="text-xs text-text-muted">Port: <span className="font-medium text-text-main">{selectedVuln.port || "N/A"}</span></p>
+                  <p className="text-xs text-text-muted">Service: <span className="font-medium text-text-main">{selectedVuln.service || "N/A"}</span></p>
                   <p className="text-xs text-text-muted">AI Contextual Risk: <span className="font-medium text-text-main">{selectedVuln.contextual_risk_score || "N/A"}</span></p>
                 </div>
               </div>

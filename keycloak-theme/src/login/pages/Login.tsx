@@ -14,8 +14,9 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
 
     return (
         <div className="login-container">
-            {/* Unified Background Gradient - Left Edge */}
-            <div className="bg-gradient" />
+            {/* Glowing Orbs Background */}
+            <div className="bg-glow-1" />
+            <div className="bg-glow-2" />
             
             <LanguageSwitcher kcContext={kcContext} />
 

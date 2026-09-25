@@ -243,9 +243,10 @@ export default function ReportsPage() {
           </button>
           <button 
             onClick={() => handleDeleteReport(row.id)}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-critical/10 text-critical hover:bg-critical hover:text-white rounded-md transition-colors shadow-sm text-sm"
+            className="p-1 text-text-muted hover:text-red-500 transition-colors"
+            title="Delete Report"
           >
-            <Trash2 className="w-4 h-4" /> Delete
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       )

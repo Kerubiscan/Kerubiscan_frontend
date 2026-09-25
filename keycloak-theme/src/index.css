@@ -15,10 +15,12 @@
   --text-muted: #9ca3af;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
@@ -49,12 +51,33 @@ body {
 }
 
 /* Background effects */
-.bg-gradient {
+.bg-glow-1 {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.1;
-  background-image: radial-gradient(circle at 0% 50%, var(--primary) 0%, transparent 60%);
+  top: -20%;
+  left: -10%;
+  width: 70vw;
+  height: 70vw;
+  background: radial-gradient(circle, rgba(18, 161, 56, 0.12) 0%, transparent 60%);
+  filter: blur(80px);
+  z-index: 0;
+  animation: float 15s ease-in-out infinite alternate;
+}
+
+.bg-glow-2 {
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(18, 161, 56, 0.08) 0%, transparent 60%);
+  filter: blur(100px);
+  z-index: 0;
+  animation: float 20s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(3%, 5%); }
 }
 
 /* Layout */
@@ -104,20 +127,22 @@ body {
 .login-card {
   width: 100%;
   max-width: 32rem;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  background: rgba(10, 23, 17, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   z-index: 10;
   margin: auto 0;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
 }
 
-@media (min-width: 1280px) {
-  .login-card {
-    padding: 2.5rem;
-  }
+.login-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Typography & Titles */
@@ -131,13 +156,15 @@ body {
 .mt-10 { margin-top: 2.5rem; }
 
 .title-main {
-  font-size: 2.25rem;
-  line-height: 1.2;
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem;
+  line-height: 1.1;
   font-weight: 700;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 @media (min-width: 1280px) {
-  .title-main { font-size: 3rem; }
+  .title-main { font-size: 3.5rem; }
 }
 
 .title-highlight { color: var(--primary); }
@@ -205,13 +232,13 @@ body {
 .form-input {
   display: block;
   width: 100%;
-  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-  background-color: transparent;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  padding: 0.875rem 0.875rem 0.875rem 2.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
   font-size: 0.875rem;
   color: var(--text-main);
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -230,7 +257,8 @@ body {
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 4px rgba(18, 161, 56, 0.15);
 }
 
 .form-input::placeholder {
@@ -256,19 +284,37 @@ body {
 
 .btn-primary {
   width: 100%;
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: var(--text-main);
   font-weight: 600;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.875rem;
+  border-radius: 0.75rem;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   font-size: 1rem;
+  box-shadow: 0 4px 15px -3px rgba(18, 161, 56, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(rgba(255,255,255,0.1), transparent);
+  border-radius: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(18, 161, 56, 0.5);
+}
+
+.btn-primary:hover::after {
+  opacity: 1;
 }
 
 .btn-outline {
@@ -390,9 +436,10 @@ body {
   flex-direction: column;
 }
 .logo-title {
+  font-family: 'Outfit', sans-serif;
   font-size: 2.25rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: -0.02em;
   line-height: 1;
   color: var(--text-main);
   margin: 0;

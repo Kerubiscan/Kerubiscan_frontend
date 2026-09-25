@@ -168,27 +168,23 @@ export default function AdminUsersPage() {
             className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[200px]"
           >
             <span className="truncate pr-2">
-              {roleFilter === "All" ? "All Roles" : roleFilter === "admin" ? "Platform Administrator" : "Security Analyst"}
+              {roleFilter}
             </span>
             <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isRoleDropdownOpen && (
             <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-              {[
-                { id: "All", label: "All Roles" },
-                { id: "admin", label: "Platform Administrator" },
-                { id: "user", label: "Security Analyst" }
-              ].map(r => (
+              {["All", ...Array.from(new Set(users.flatMap(u => (u.realmRoles || u.roles || []).filter((r: string) => r !== "default-roles-kimia" && r !== "offline_access" && r !== "uma_authorization"))))].map(r => (
                 <button
-                  key={r.id}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${roleFilter === r.id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                  key={r}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${roleFilter === r ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
                   onClick={() => {
-                    setRoleFilter(r.id);
+                    setRoleFilter(r);
                     setRoleDropdownOpen(false);
                   }}
                 >
-                  {r.label}
+                  {r === "All" ? "All Roles" : r}
                 </button>
               ))}
             </div>
@@ -200,8 +196,7 @@ export default function AdminUsersPage() {
         columns={columns} 
         data={roleFilter === "All" ? users : users.filter(u => {
            const roles = u.realmRoles || u.roles || [];
-           if (roleFilter === "admin") return roles.includes("admin") || roles.includes("Administrator");
-           return !roles.includes("admin") && !roles.includes("Administrator");
+           return roles.includes(roleFilter);
         })} 
         keyField="id" 
       />
