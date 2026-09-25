@@ -14,15 +14,11 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
 
     return (
         <div className="login-container">
-            {/* Glowing Orbs Background */}
-            <div className="bg-glow-1" />
-            <div className="bg-glow-2" />
-            
             <LanguageSwitcher kcContext={kcContext} />
 
-            {/* Left Panel */}
-            <div className="left-panel">
-                <div className="left-panel-content">
+            <div className="centered-card-wrapper">
+                {/* Left Panel */}
+                <div className="centered-card-left">
                     <div className="flex-none">
                         <Logo />
                     </div>
@@ -33,7 +29,7 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                                 Anticipez. Analysez.<br />
                                 <span className="title-highlight">Sécurisez.</span>
                             </h1>
-                            <p className="text-muted text-lg mt-4" style={{ lineHeight: '1.6', maxWidth: '90%' }}>
+                            <p className="text-muted text-lg mt-4" style={{ lineHeight: '1.6' }}>
                                 KERUBISCAN vous aide à détecter, analyser et prioriser les vulnérabilités de votre infrastructure pour renforcer votre posture de sécurité de manière proactive.
                             </p>
                         </div>
@@ -46,15 +42,13 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                         </div>
                     </div>
                     
-                    <div className="flex-none text-sm text-muted mt-auto" style={{ paddingBottom: '1rem' }}>
+                    <div className="flex-none text-sm text-muted mt-auto pt-4">
                         © {new Date().getFullYear()} <span className="text-primary font-semibold">KERUBISCAN</span>. All rights reserved.
                     </div>
                 </div>
-            </div>
 
-            {/* Right Panel */}
-            <div className="right-panel">
-                <div className="login-card">
+                {/* Right Panel */}
+                <div className="centered-card-right">
                     <div className="text-center mb-8">
                         <h2 className="title-main mb-3" style={{ fontSize: '1.875rem' }}>Connexion</h2>
                         <div className="divider-line"></div>
