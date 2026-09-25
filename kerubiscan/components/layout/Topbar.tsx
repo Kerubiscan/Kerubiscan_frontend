@@ -88,65 +88,7 @@ export function Topbar() {
       <div className="flex items-center gap-6">
         <LanguageSwitcher />
 
-        <button onClick={handleHelpClick} className="text-text-muted hover:text-white transition-colors" title="Aide / Help">
-          <HelpCircle className="w-5 h-5" />
-        </button>
-        
-        <div className="relative">
-          <button 
-            onClick={() => setIsNotifMenuOpen(!isNotifMenuOpen)}
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setTimeout(() => setIsNotifMenuOpen(false), 200);
-              }
-            }}
-            className="text-text-muted hover:text-white transition-colors relative focus:outline-none mt-1.5 mr-2" 
-            title="Notifications"
-          >
-            <Bell className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-status-critical text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-base">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-          
-          {isNotifMenuOpen && (
-            <div className="absolute right-0 mt-3 w-72 bg-surface border border-border rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
-              <div className="px-4 py-3 border-b border-border/50 bg-base/50 flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-white">Notifications</h3>
-                {unreadCount > 0 && (
-                  <span className="bg-status-critical/20 text-status-critical text-xs px-2 py-0.5 rounded-full font-medium">
-                    {unreadCount} new
-                  </span>
-                )}
-              </div>
-              
-              <div className="max-h-64 overflow-y-auto p-2">
-                {unreadCount > 0 ? (
-                  <div className="px-3 py-4 text-center">
-                    <div className="w-10 h-10 rounded-full bg-status-info/10 flex items-center justify-center mx-auto mb-3">
-                      <Bell className="w-5 h-5 text-status-info" />
-                    </div>
-                    <p className="text-sm font-medium text-white mb-1">New Activity Detected</p>
-                    <p className="text-xs text-text-muted">There are {unreadCount} new actions recorded in the system audit logs.</p>
-                  </div>
-                ) : (
-                  <div className="px-3 py-6 text-center">
-                    <p className="text-sm text-text-muted">You have no new notifications.</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-2 border-t border-border/50 bg-base/50">
-                <Link href="/dashboard/audit" className="block w-full py-2 text-center text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors">
-                  View full Audit Log
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-        
+
         <div className="relative">
           <button 
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -173,12 +115,6 @@ export function Topbar() {
                 <p className="text-xs text-text-muted truncate">Administrator</p>
               </div>
               <div className="py-1">
-                <Link href="/dashboard/settings" className="block px-4 py-2 text-sm text-text-main hover:bg-base hover:text-white transition-colors">
-                  Settings
-                </Link>
-                <Link href="/dashboard/audit" className="block px-4 py-2 text-sm text-text-main hover:bg-base hover:text-white transition-colors">
-                  Activity Log
-                </Link>
               </div>
               <div className="py-1 border-t border-border/50">
                 <button 

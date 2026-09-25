@@ -176,31 +176,6 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                         </button>
                     </form>
 
-                    {realm.password && (
-                        <>
-                            <div className="divider-container">
-                                <div className="divider-line-bg">
-                                    <div className="divider-line-inner"></div>
-                                </div>
-                                <div className="divider-text">
-                                    <span>ou</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 space-y-4">
-                                <a
-                                    key="sso"
-                                    id="social-sso"
-                                    className="btn-outline"
-                                    href="#"
-                                    onClick={(e) => e.preventDefault()}
-                                >
-                                    <Shield style={{ width: '1.25rem', height: '1.25rem' }} />
-                                    Se connecter avec SSO
-                                </a>
-                            </div>
-                        </>
-                    )}
 
                     {realm.password && realm.registrationAllowed && !registrationDisabled && (
                         <div className="mt-10 text-center text-sm text-muted">

@@ -199,8 +199,11 @@ export default function ReportsPage() {
     },
     { header: t("typeCol"), accessor: "scan_type" as const },
     { header: t("statusCol"), accessor: "status" as const },
-    { header: t("generatedOnCol"), accessor: "created_at" as const, className: "text-text-muted",
-      cell: (row: any) => new Date(row.created_at || new Date()).toLocaleString()
+    { header: t("generatedOnCol"), className: "text-text-muted",
+      accessor: (row: any) => {
+        const d = new Date(row.created_at || new Date());
+        return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
     },
     { 
       header: t("actionCol"), 
@@ -215,7 +218,7 @@ export default function ReportsPage() {
           </button>
           <button 
             onClick={() => handleDeleteReport(row.id)}
-            className="flex items-center gap-1 text-critical hover:text-critical/80 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-critical/10 text-critical hover:bg-critical hover:text-white rounded-md transition-colors shadow-sm text-sm"
           >
             <Trash2 className="w-4 h-4" /> Delete
           </button>

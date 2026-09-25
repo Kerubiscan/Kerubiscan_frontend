@@ -411,7 +411,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
           </button>
           <button 
             onClick={(e) => handleDeleteVuln(row.id, e)}
-            className="p-1 text-text-muted hover:text-critical transition-colors"
+            className="p-1.5 bg-critical/10 text-critical hover:bg-critical hover:text-white rounded-md transition-colors shadow-sm"
             title="Delete Vulnerability"
           >
             <Trash2 className="w-4 h-4" />
@@ -684,7 +684,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
 
             {isScannerDropdownOpen && (
               <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                {["All", "OPENVAS", "NMAP", "NUCLEI", "ZAP", "METASPLOIT"].map(opt => (
+                {["All", "OPENVAS", "NMAP", "NUCLEI", "ZAP"].map(opt => (
                   <button
                     key={opt}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors flex items-center ${scannerFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}

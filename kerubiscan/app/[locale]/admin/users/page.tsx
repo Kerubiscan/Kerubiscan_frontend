@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/DataTable";
 export default function AdminUsersPage() {
   const t = useTranslations("AdminUsers");
   const [users, setUsers] = useState<any[]>([]);
+  const [roleFilter, setRoleFilter] = useState<string>("All");
   const [refresh, setRefresh] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,6 +63,24 @@ export default function AdminUsersPage() {
           {row.enabled ? "Active" : "Disabled"}
         </span>
       )
+    },
+    {
+      header: "Role",
+      accessor: (row: any) => {
+        const roles = row.realmRoles || row.roles || [];
+        if (roles.length > 0) {
+          return (
+            <div className="flex gap-1 flex-wrap">
+              {roles.filter((r: string) => r !== "default-roles-kimia" && r !== "offline_access" && r !== "uma_authorization").map((r: string) => (
+                <span key={r} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                  {r}
+                </span>
+              ))}
+            </div>
+          );
+        }
+        return <span className="text-text-muted text-xs">User</span>;
+      }
     },
     {
       header: t("actions"),
@@ -134,9 +153,26 @@ export default function AdminUsersPage() {
         </a>
       </div>
 
+      <div className="mb-6 flex items-center gap-3">
+        <label className="text-sm text-text-muted font-medium">Filter by Role:</label>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[150px]"
+        >
+          <option value="All">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+        </select>
+      </div>
+
       <DataTable 
         columns={columns} 
-        data={users} 
+        data={roleFilter === "All" ? users : users.filter(u => {
+           const roles = u.realmRoles || u.roles || [];
+           if (roleFilter === "admin") return roles.includes("admin") || roles.includes("Administrator");
+           return !roles.includes("admin") && !roles.includes("Administrator");
+        })} 
         keyField="id" 
       />
     </div>
