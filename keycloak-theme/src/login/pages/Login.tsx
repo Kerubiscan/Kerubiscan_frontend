@@ -23,7 +23,7 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                         <Logo />
                     </div>
                     
-                    <div className="flex-grow flex flex-col justify-center mt-auto mb-auto">
+                    <div className="flex-grow flex flex-col justify-center">
                         <div>
                             <h1 className="title-main">
                                 Anticipez. Analysez.<br />
@@ -42,7 +42,7 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                         </div>
                     </div>
                     
-                    <div className="flex-none text-sm text-muted mt-auto" style={{ paddingTop: '4rem' }}>
+                    <div className="flex-none text-sm text-muted mt-8">
                         © {new Date().getFullYear()} <span className="text-primary font-semibold">KERUBISCAN</span>. All rights reserved.
                     </div>
                 </div>
