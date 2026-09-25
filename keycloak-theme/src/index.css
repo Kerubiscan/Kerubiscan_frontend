@@ -318,12 +318,12 @@ body {
 /* Feature grid */
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
   width: 100%;
 }
 @media (min-width: 1280px) {
-  .feature-grid { gap: 2.5rem; }
+  .feature-grid { gap: 1.5rem; }
 }
 
 /* Graphic Area */
