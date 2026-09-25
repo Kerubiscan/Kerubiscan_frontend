@@ -61,7 +61,7 @@ export function DataTable<T>({
 
   return (
     <div className="flex flex-col rounded-xl border border-border bg-base">
-      <div className="overflow-x-auto min-h-[250px]">
+      <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-surface/50 border-b border-border">
             <tr>
@@ -125,10 +125,9 @@ export function DataTable<T>({
       </div>
       
       {/* Pagination Controls */}
-      {data.length > pageSize && (
-        <div className="flex items-center justify-between px-6 py-3 border-t border-border bg-surface/30">
+      <div className="flex items-center justify-between px-6 py-3 border-t border-border bg-surface/30">
           <div className="text-sm text-text-muted">
-            Showing {startIndex + 1} to {Math.min(startIndex + pageSize, data.length)} of {data.length} entries
+            Showing {data.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + pageSize, data.length)} of {data.length} entries
           </div>
           <div className="flex gap-2">
             <button
@@ -166,7 +165,6 @@ export function DataTable<T>({
             </button>
           </div>
         </div>
-      )}
     </div>
   );
 }
