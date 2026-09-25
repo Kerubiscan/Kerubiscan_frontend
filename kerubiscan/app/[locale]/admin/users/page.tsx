@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
-import { UserPlus, Shield, ExternalLink, RefreshCw } from "lucide-react";
+import { UserPlus, Shield, ExternalLink, RefreshCw, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 
@@ -11,6 +11,7 @@ export default function AdminUsersPage() {
   const t = useTranslations("AdminUsers");
   const [users, setUsers] = useState<any[]>([]);
   const [roleFilter, setRoleFilter] = useState<string>("All");
+  const [isRoleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -155,15 +156,44 @@ export default function AdminUsersPage() {
 
       <div className="mb-6 flex items-center gap-3">
         <label className="text-sm text-text-muted font-medium">Filter by Role:</label>
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[150px]"
+        <div 
+          className="relative" 
+          tabIndex={0} 
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setRoleDropdownOpen(false);
+          }}
         >
-          <option value="All">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="user">User</option>
-        </select>
+          <button
+            onClick={() => setRoleDropdownOpen(!isRoleDropdownOpen)}
+            className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[200px]"
+          >
+            <span className="truncate pr-2">
+              {roleFilter === "All" ? "All Roles" : roleFilter === "admin" ? "Platform Administrator" : "Security Analyst"}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isRoleDropdownOpen && (
+            <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+              {[
+                { id: "All", label: "All Roles" },
+                { id: "admin", label: "Platform Administrator" },
+                { id: "user", label: "Security Analyst" }
+              ].map(r => (
+                <button
+                  key={r.id}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${roleFilter === r.id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                  onClick={() => {
+                    setRoleFilter(r.id);
+                    setRoleDropdownOpen(false);
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <DataTable 

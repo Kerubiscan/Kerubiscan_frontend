@@ -18,6 +18,13 @@ export default function SchedulingPage() {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isFrequencyDropdownOpen, setIsFrequencyDropdownOpen] = useState(false);
 
+  // Modal dropdowns
+  const [isModalFreqOpen, setIsModalFreqOpen] = useState(false);
+  const [isModalDayOfWeekOpen, setIsModalDayOfWeekOpen] = useState(false);
+  const [isModalDayOfMonthOpen, setIsModalDayOfMonthOpen] = useState(false);
+  const [isModalCompanyOpen, setIsModalCompanyOpen] = useState(false);
+  const [isModalEngineOpen, setIsModalEngineOpen] = useState(false);
+
   const [schedulesData, setSchedulesData] = useState<any[]>([]);
   const [companiesData, setCompaniesData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -387,36 +394,56 @@ export default function SchedulingPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{t("frequencyLabel")}</label>
-                  <select value={newSchedule.frequency} onChange={e => setNewSchedule({...newSchedule, frequency: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="Daily">{t("freqDaily")}</option>
-                    <option value="Weekly">{t("freqWeekly")}</option>
-                    <option value="Monthly">{t("freqMonthly")}</option>
-                  </select>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalFreqOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalFreqOpen(!isModalFreqOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newSchedule.frequency === "Daily" ? t("freqDaily") : newSchedule.frequency === "Weekly" ? t("freqWeekly") : t("freqMonthly")}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalFreqOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalFreqOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {["Daily", "Weekly", "Monthly"].map(f => (
+                          <button type="button" key={f} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.frequency === f ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, frequency: f}); setIsModalFreqOpen(false); }}>{f === "Daily" ? t("freqDaily") : f === "Weekly" ? t("freqWeekly") : t("freqMonthly")}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {newSchedule.frequency === "Weekly" && (
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">{t("dayOfWeekLabel")}</label>
-                    <select value={newSchedule.dayOfWeek} onChange={e => setNewSchedule({...newSchedule, dayOfWeek: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                      <option value="Friday">Friday</option>
-                      <option value="Saturday">Saturday</option>
-                      <option value="Sunday">Sunday</option>
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalDayOfWeekOpen(false); }}>
+                      <button type="button" onClick={() => setIsModalDayOfWeekOpen(!isModalDayOfWeekOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newSchedule.dayOfWeek}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalDayOfWeekOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isModalDayOfWeekOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(d => (
+                            <button type="button" key={d} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.dayOfWeek === d ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, dayOfWeek: d}); setIsModalDayOfWeekOpen(false); }}>{d}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {newSchedule.frequency === "Monthly" && (
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">{t("dayOfMonthLabel")}</label>
-                    <select value={newSchedule.dayOfMonth} onChange={e => setNewSchedule({...newSchedule, dayOfMonth: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      {[...Array(31)].map((_, i) => (
-                        <option key={i+1} value={(i+1).toString()}>{i+1}</option>
-                      ))}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalDayOfMonthOpen(false); }}>
+                      <button type="button" onClick={() => setIsModalDayOfMonthOpen(!isModalDayOfMonthOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newSchedule.dayOfMonth}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalDayOfMonthOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isModalDayOfMonthOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {[...Array(31)].map((_, i) => (
+                            <button type="button" key={i+1} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.dayOfMonth === (i+1).toString() ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, dayOfMonth: (i+1).toString()}); setIsModalDayOfMonthOpen(false); }}>{i+1}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -427,28 +454,44 @@ export default function SchedulingPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{t("colCompany")}</label>
-                  <select required value={newSchedule.company_id} onChange={e => setNewSchedule({...newSchedule, company_id: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="">{t("allCompanies")}</option>
-                    {companiesData.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalCompanyOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalCompanyOpen(!isModalCompanyOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newSchedule.company_id ? companiesData.find(c => String(c.id) === String(newSchedule.company_id))?.name : t("allCompanies")}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalCompanyOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalCompanyOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${!newSchedule.company_id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, company_id: ""}); setIsModalCompanyOpen(false); }}>{t("allCompanies")}</button>
+                        {companiesData.map(c => (
+                          <button type="button" key={c.id} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${String(newSchedule.company_id) === String(c.id) ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, company_id: String(c.id)}); setIsModalCompanyOpen(false); }}>{c.name}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{t("scannerEngineLabel")}</label>
-                  <select value={newSchedule.scanner_engine} onChange={e => setNewSchedule({...newSchedule, scanner_engine: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    {newSchedule.scan_type === "DISCOVERY" ? (
-                      <option value="NMAP">Nmap</option>
-                    ) : (
-                      <>
-                        <option value="OPENVAS">OpenVAS</option>
-                        <option value="NMAP">Nmap</option>
-                        <option value="NUCLEI">Nuclei</option>
-                        <option value="OWASP_ZAP">OWASP ZAP</option>
-                      </>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalEngineOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalEngineOpen(!isModalEngineOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newSchedule.scanner_engine === "OPENVAS" ? "OpenVAS" : newSchedule.scanner_engine === "NMAP" ? "Nmap" : newSchedule.scanner_engine === "NUCLEI" ? "Nuclei" : "OWASP ZAP"}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalEngineOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalEngineOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {newSchedule.scan_type === "DISCOVERY" ? (
+                          <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors bg-primary/10 text-primary font-medium`} onClick={() => { setNewSchedule({...newSchedule, scanner_engine: "NMAP"}); setIsModalEngineOpen(false); }}>Nmap</button>
+                        ) : (
+                          <>
+                            <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.scanner_engine === "OPENVAS" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, scanner_engine: "OPENVAS"}); setIsModalEngineOpen(false); }}>OpenVAS</button>
+                            <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.scanner_engine === "NMAP" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, scanner_engine: "NMAP"}); setIsModalEngineOpen(false); }}>Nmap</button>
+                            <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.scanner_engine === "NUCLEI" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, scanner_engine: "NUCLEI"}); setIsModalEngineOpen(false); }}>Nuclei</button>
+                            <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSchedule.scanner_engine === "OWASP_ZAP" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSchedule({...newSchedule, scanner_engine: "OWASP_ZAP"}); setIsModalEngineOpen(false); }}>OWASP ZAP</button>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </select>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">

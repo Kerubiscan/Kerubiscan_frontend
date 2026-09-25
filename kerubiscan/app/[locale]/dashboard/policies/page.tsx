@@ -18,6 +18,10 @@ export default function PoliciesPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
 
+  // Modal dropdowns
+  const [isModalTypeOpen, setIsModalTypeOpen] = useState(false);
+  const [isModalCompanyOpen, setIsModalCompanyOpen] = useState(false);
+
   const [policiesData, setPoliciesData] = useState<any[]>([]);
   const [companiesData, setCompaniesData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -266,21 +270,36 @@ export default function PoliciesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{t("policyTypeLabel")}</label>
-                  <select value={newPolicy.scan_type} onChange={e => setNewPolicy({...newPolicy, scan_type: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="Full and fast">Full and fast</option>
-                    <option value="Web App">Web App</option>
-                    <option value="Compliance">Compliance</option>
-                    <option value="Network Discovery">Network Discovery</option>
-                  </select>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalTypeOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalTypeOpen(!isModalTypeOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newPolicy.scan_type}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalTypeOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalTypeOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {["Full and fast", "Web App", "Compliance", "Network Discovery"].map(t => (
+                          <button type="button" key={t} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newPolicy.scan_type === t ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewPolicy({...newPolicy, scan_type: t}); setIsModalTypeOpen(false); }}>{t}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{common("colCompany")}</label>
-                  <select required value={newPolicy.company_id} onChange={e => setNewPolicy({...newPolicy, company_id: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="">{common("allCompanies")}</option>
-                    {companiesData.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalCompanyOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalCompanyOpen(!isModalCompanyOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newPolicy.company_id ? companiesData.find(c => String(c.id) === String(newPolicy.company_id))?.name : common("allCompanies")}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalCompanyOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalCompanyOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${!newPolicy.company_id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewPolicy({...newPolicy, company_id: ""}); setIsModalCompanyOpen(false); }}>{common("allCompanies")}</button>
+                        {companiesData.map(c => (
+                          <button type="button" key={c.id} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${String(newPolicy.company_id) === String(c.id) ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewPolicy({...newPolicy, company_id: String(c.id)}); setIsModalCompanyOpen(false); }}>{c.name}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               

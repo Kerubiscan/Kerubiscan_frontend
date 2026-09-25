@@ -9,7 +9,7 @@ export function Logo() {
       </div>
       <div className="logo-text-wrapper">
         <span className="logo-title">KERUBISCAN</span>
-        <span className="logo-subtitle">Vulnerability Scanner</span>
+        <span className="logo-subtitle">Vulnerability Manager</span>
       </div>
     </div>
   );

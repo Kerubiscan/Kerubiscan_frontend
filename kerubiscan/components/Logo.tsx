@@ -14,7 +14,7 @@ export function Logo({ className = "" }: { className?: string }) {
       </div>
       <div className="flex flex-col">
         <span className="text-[19px] font-bold tracking-widest leading-none text-white">KERUBISCAN</span>
-        <span className="text-[9px] text-text-muted mt-1 uppercase tracking-widest">Vulnerability Scanner</span>
+        <span className="text-[9px] text-text-muted mt-1 uppercase tracking-widest">Vulnerability Manager</span>
       </div>
     </div>
   );

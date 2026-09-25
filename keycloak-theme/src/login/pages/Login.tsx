@@ -26,14 +26,14 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                         <Logo />
                     </div>
                     
-                    <div className="flex-none mt-8">
+                    <div className="flex-grow flex flex-col justify-center mt-auto mb-auto">
                         <div>
                             <h1 className="title-main">
                                 Anticipez. Analysez.<br />
                                 <span className="title-highlight">Sécurisez.</span>
                             </h1>
-                            <p className="text-muted text-sm mt-4" style={{ lineHeight: '1.6' }}>
-                                KERUBISCAN vous aide à détecter, analyser et prioriser les vulnérabilités de votre infrastructure pour renforcer votre posture de sécurité.
+                            <p className="text-muted text-lg mt-4" style={{ lineHeight: '1.6', maxWidth: '90%' }}>
+                                KERUBISCAN vous aide à détecter, analyser et prioriser les vulnérabilités de votre infrastructure pour renforcer votre posture de sécurité de manière proactive.
                             </p>
                         </div>
 
@@ -43,16 +43,6 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                             <FeatureItem icon={Bell} title="Alertes intelligentes" description="Soyez notifié des risques critiques en temps réel." />
                             <FeatureItem icon={Shield} title="Sécurité renforcée" description="Réduisez votre surface d'attaque efficacement." />
                         </div>
-                    </div>
-                    
-                    {/* Graphic Area */}
-                    <div className="graphic-area">
-                        <img 
-                            src={`${import.meta.env.BASE_URL}illus.png`}
-                            alt="Kerubiscan Platform" 
-                            className="graphic-img"
-                            onError={(e) => e.currentTarget.style.display = 'none'} 
-                        />
                     </div>
                     
                     <div className="flex-none text-sm text-muted mt-auto" style={{ paddingBottom: '1rem' }}>

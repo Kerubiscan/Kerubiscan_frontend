@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
-import { Plus, X, Lock, Trash2, Loader2 } from "lucide-react";
+import { Plus, X, Lock, Trash2, Loader2, ChevronDown } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
 export default function SecretsPage() {
@@ -25,6 +25,9 @@ export default function SecretsPage() {
     port: "5432",
     awsAccessKeyId: ""
   });
+
+  const [isModalTypeOpen, setIsModalTypeOpen] = useState(false);
+  const [isModalAssetOpen, setIsModalAssetOpen] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -180,23 +183,39 @@ export default function SecretsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">{t("secretTypeLabel")}</label>
-                  <select value={newSecret.type} onChange={e => setNewSecret({...newSecret, type: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="ssh">{t("typeSsh")}</option>
-                    <option value="smb">{t("typeSmb")}</option>
-                    <option value="snmpv2">SNMPv2 Community</option>
-                    <option value="http-basic">HTTP Basic Auth</option>
-                    <option value="database">{t("typeDb")}</option>
-                    <option value="aws">AWS Key</option>
-                  </select>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalTypeOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalTypeOpen(!isModalTypeOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newSecret.type === "ssh" ? t("typeSsh") : newSecret.type === "smb" ? t("typeSmb") : newSecret.type === "snmpv2" ? "SNMPv2 Community" : newSecret.type === "http-basic" ? "HTTP Basic Auth" : newSecret.type === "database" ? t("typeDb") : "AWS Key"}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalTypeOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalTypeOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSecret.type === "ssh" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, type: "ssh"}); setIsModalTypeOpen(false); }}>{t("typeSsh")}</button>
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSecret.type === "smb" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, type: "smb"}); setIsModalTypeOpen(false); }}>{t("typeSmb")}</button>
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSecret.type === "snmpv2" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, type: "snmpv2"}); setIsModalTypeOpen(false); }}>SNMPv2 Community</button>
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSecret.type === "http-basic" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, type: "http-basic"}); setIsModalTypeOpen(false); }}>HTTP Basic Auth</button>
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSecret.type === "database" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, type: "database"}); setIsModalTypeOpen(false); }}>{t("typeDb")}</button>
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newSecret.type === "aws" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, type: "aws"}); setIsModalTypeOpen(false); }}>AWS Key</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-muted mb-1.5">Asset</label>
-                  <select required value={newSecret.asset_id} onChange={e => setNewSecret({...newSecret, asset_id: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                    <option value="">Select an asset</option>
-                    {assets.map(a => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalAssetOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalAssetOpen(!isModalAssetOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{newSecret.asset_id ? assets.find(a => String(a.id) === String(newSecret.asset_id))?.name : "Select an asset"}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalAssetOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalAssetOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${!newSecret.asset_id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, asset_id: ""}); setIsModalAssetOpen(false); }}>Select an asset</button>
+                        {assets.map(a => (
+                          <button type="button" key={a.id} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${String(newSecret.asset_id) === String(a.id) ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewSecret({...newSecret, asset_id: String(a.id)}); setIsModalAssetOpen(false); }}>{a.name}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

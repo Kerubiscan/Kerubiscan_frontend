@@ -18,6 +18,19 @@ export default function ReportsPage() {
   const [isScanDropdownOpen, setIsScanDropdownOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("All");
   
+  // Advanced filters
+  const [scannerFilter, setScannerFilter] = useState("All");
+  const [assetFilter, setAssetFilter] = useState("All");
+  const [scanTypeFilter, setScanTypeFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("");
+  
+  // Dropdown states
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+  const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
+  const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
+  const [isScanTypeDropdownOpen, setIsScanTypeDropdownOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  
   // AI state
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,9 +61,21 @@ export default function ReportsPage() {
   const selectedScan = scans.find(s => s.id === selectedScanId);
 
   const filteredScans = useMemo(() => {
-    if (selectedCompanyId === "All") return scans;
-    return scans.filter(s => s.company_id === selectedCompanyId);
-  }, [scans, selectedCompanyId]);
+    let result = scans;
+    if (selectedCompanyId !== "All") result = result.filter(s => s.company_id === selectedCompanyId);
+    if (scannerFilter !== "All") result = result.filter(s => (s.source_engine || "OPENVAS").toUpperCase() === scannerFilter);
+    if (assetFilter !== "All") result = result.filter(s => s.target === assetFilter);
+    if (scanTypeFilter !== "All") result = result.filter(s => (s.scan_type || "").toUpperCase() === scanTypeFilter.toUpperCase());
+    if (dateFilter) {
+      result = result.filter(s => {
+        const d = new Date(s.created_at || new Date());
+        return d.toISOString().split('T')[0] === dateFilter;
+      });
+    }
+    return result;
+  }, [scans, selectedCompanyId, scannerFilter, assetFilter, scanTypeFilter, dateFilter]);
+
+  const uniqueAssets = useMemo(() => Array.from(new Set(scans.map(s => s.target))), [scans]);
 
   const handleGenerateSummary = async () => {
     if (!selectedScanId) return;
@@ -295,22 +320,160 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        {/* Company Filter */}
         <div className="flex items-center gap-3">
           <label className="text-sm text-text-muted font-medium">Filter by Company:</label>
-          <select
-            value={selectedCompanyId}
-            onChange={(e) => {
-              setSelectedCompanyId(e.target.value);
-              setSelectedScanId(null);
+          <div 
+            className="relative" 
+            tabIndex={0} 
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsCompanyDropdownOpen(false);
             }}
-            className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[150px]"
           >
-            <option value="All">All Companies</option>
-            {companies.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            <button
+              onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[150px]"
+            >
+              <span className="truncate pr-2">
+                {selectedCompanyId === "All" ? "All Companies" : companies.find(c => c.id === selectedCompanyId)?.name || "Unknown"}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isCompanyDropdownOpen && (
+              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                <button
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${selectedCompanyId === "All" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                  onClick={() => { setSelectedCompanyId("All"); setSelectedScanId(null); setIsCompanyDropdownOpen(false); }}
+                >
+                  All Companies
+                </button>
+                {companies.map(c => (
+                  <button
+                    key={c.id}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${selectedCompanyId === c.id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    onClick={() => { setSelectedCompanyId(c.id); setSelectedScanId(null); setIsCompanyDropdownOpen(false); }}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">Scanner:</label>
+          <div 
+            className="relative" 
+            tabIndex={0} 
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsScannerDropdownOpen(false);
+            }}
+          >
+            <button
+              onClick={() => setIsScannerDropdownOpen(!isScannerDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[150px]"
+            >
+              <span className="truncate pr-2">{scannerFilter}</span>
+              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isScannerDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isScannerDropdownOpen && (
+              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                {["All", "OPENVAS", "NMAP", "NUCLEI", "ZAP"].map(opt => (
+                  <button
+                    key={opt}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${scannerFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    onClick={() => { setScannerFilter(opt); setSelectedScanId(null); setIsScannerDropdownOpen(false); }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">Scan Type:</label>
+          <div 
+            className="relative" 
+            tabIndex={0} 
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsScanTypeDropdownOpen(false);
+            }}
+          >
+            <button
+              onClick={() => setIsScanTypeDropdownOpen(!isScanTypeDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px]"
+            >
+              <span className="truncate pr-2">{scanTypeFilter === "All" ? "All Types" : scanTypeFilter}</span>
+              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isScanTypeDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isScanTypeDropdownOpen && (
+              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                {["All", "DISCOVERY", "VULNERABILITY"].map(opt => (
+                  <button
+                    key={opt}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${scanTypeFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    onClick={() => { setScanTypeFilter(opt); setSelectedScanId(null); setIsScanTypeDropdownOpen(false); }}
+                  >
+                    {opt === "All" ? "All Types" : opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">Asset:</label>
+          <div 
+            className="relative" 
+            tabIndex={0} 
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsAssetDropdownOpen(false);
+            }}
+          >
+            <button
+              onClick={() => setIsAssetDropdownOpen(!isAssetDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-w-[160px]"
+            >
+              <span className="truncate pr-2">{assetFilter === "All" ? "All Assets" : assetFilter}</span>
+              <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isAssetDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isAssetDropdownOpen && (
+              <div className="absolute z-10 top-full left-0 mt-2 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-60 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                <button
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${assetFilter === "All" ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                  onClick={() => { setAssetFilter("All"); setSelectedScanId(null); setIsAssetDropdownOpen(false); }}
+                >
+                  All Assets
+                </button>
+                {uniqueAssets.map(opt => (
+                  <button
+                    key={opt}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors truncate ${assetFilter === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                    onClick={() => { setAssetFilter(opt); setSelectedScanId(null); setIsAssetDropdownOpen(false); }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-text-muted font-medium">Date:</label>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => { setDateFilter(e.target.value); setSelectedScanId(null); }}
+            className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary transition-colors [color-scheme:dark]"
+          />
+          {dateFilter && (
+            <button onClick={() => { setDateFilter(""); setSelectedScanId(null); }} className="text-xs text-primary hover:underline">Clear</button>
+          )}
         </div>
       </div>
 
@@ -326,14 +489,34 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-xs text-text-muted mb-1">Language</label>
-              <select 
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text-main focus:outline-none focus:border-primary"
+              <div 
+                className="relative" 
+                tabIndex={0} 
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsLanguageDropdownOpen(false);
+                }}
               >
-                <option value="French">French</option>
-                <option value="English">English</option>
-              </select>
+                <button
+                  onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                  className="flex items-center justify-between w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text-main focus:outline-none focus:border-primary transition-colors"
+                >
+                  <span className="truncate pr-2">{language}</span>
+                  <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isLanguageDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isLanguageDropdownOpen && (
+                  <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {["French", "English"].map(opt => (
+                      <button
+                        key={opt}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${language === opt ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`}
+                        onClick={() => { setLanguage(opt); setIsLanguageDropdownOpen(false); }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-xs text-text-muted mb-1">Custom Instructions for AI (Optional)</label>

@@ -26,6 +26,14 @@ export default function AssetsPage() {
   const [isEngineDropdownOpen, setIsEngineDropdownOpen] = useState(false);
   const [isDiscoveryEngineDropdownOpen, setIsDiscoveryEngineDropdownOpen] = useState(false);
 
+  // New Asset Modal dropdown states
+  const [isNewAssetCompanyOpen, setIsNewAssetCompanyOpen] = useState(false);
+  const [isNewAssetZoneOpen, setIsNewAssetZoneOpen] = useState(false);
+  const [isNewAssetEnvOpen, setIsNewAssetEnvOpen] = useState(false);
+  const [isNewAssetTypeOpen, setIsNewAssetTypeOpen] = useState(false);
+  const [isNewAssetCritOpen, setIsNewAssetCritOpen] = useState(false);
+  const [isDiscoveryZoneOpen, setIsDiscoveryZoneOpen] = useState(false);
+
   const [assetsData, setAssetsData] = useState<any[]>([]);
   const [companiesData, setCompaniesData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -255,28 +263,28 @@ export default function AssetsPage() {
                 setAssetVulnerabilities([]);
               }
             }}
-            className="p-1 text-text-muted hover:text-primary transition-colors"
+            className="p-1.5 text-text-muted hover:bg-surface-hover hover:text-white rounded-md transition-all hover:scale-110 active:scale-95"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button 
             onClick={() => handleScanAssets(row.ip_address)}
-            className="p-1 text-text-muted hover:text-blue-500 transition-colors"
+            className="p-1.5 text-text-muted hover:bg-blue-500/10 hover:text-blue-500 rounded-md transition-all hover:scale-110 active:scale-95"
             title="Scan Asset"
           >
             <ScanSearch className="w-4 h-4" />
           </button>
           <button 
             onClick={() => { setEditingAsset({...row}); setIsEditModalOpen(true); }}
-            className="p-1 text-text-muted hover:text-primary transition-colors"
+            className="p-1.5 text-text-muted hover:bg-primary/10 hover:text-primary rounded-md transition-all hover:scale-110 active:scale-95"
             title="Edit Asset"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <button 
             onClick={() => handleDeleteAsset(row.id)}
-            className="p-1 text-text-muted hover:text-red-500 transition-colors"
+            className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-md transition-all hover:scale-110 active:scale-95 shadow-sm"
             title="Delete Asset"
           >
             <Trash2 className="w-4 h-4" />
@@ -396,7 +404,7 @@ export default function AssetsPage() {
             )}
             <button 
               onClick={handleDeleteAllAssets} 
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20"
             >
               <Trash2 className="w-4 h-4" />
               Delete All
@@ -650,34 +658,84 @@ export default function AssetsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Company</label>
-                    <select value={newAsset.company_id} onChange={e => setNewAsset({...newAsset, company_id: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      <option value="">Select a company</option>
-                      {companiesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsNewAssetCompanyOpen(false); }}>
+                      <button type="button" onClick={() => setIsNewAssetCompanyOpen(!isNewAssetCompanyOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newAsset.company_id ? companiesData.find(c => String(c.id) === String(newAsset.company_id))?.name : "Select a company"}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isNewAssetCompanyOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isNewAssetCompanyOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${!newAsset.company_id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewAsset({...newAsset, company_id: ""}); setIsNewAssetCompanyOpen(false); }}>Select a company</button>
+                          {companiesData.map(c => (
+                            <button type="button" key={c.id} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${String(newAsset.company_id) === String(c.id) ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewAsset({...newAsset, company_id: String(c.id)}); setIsNewAssetCompanyOpen(false); }}>{c.name}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Network Zone</label>
-                    <select value={newAsset.network_zone} onChange={e => setNewAsset({...newAsset, network_zone: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      {zones.filter(z => z !== "All").map(z => <option key={z} value={z}>{z}</option>)}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsNewAssetZoneOpen(false); }}>
+                      <button type="button" onClick={() => setIsNewAssetZoneOpen(!isNewAssetZoneOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newAsset.network_zone || "Select zone"}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isNewAssetZoneOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isNewAssetZoneOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {zones.filter(z => z !== "All").map(z => (
+                            <button type="button" key={z} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newAsset.network_zone === z ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewAsset({...newAsset, network_zone: z}); setIsNewAssetZoneOpen(false); }}>{z}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Environment</label>
-                    <select value={newAsset.environment} onChange={e => setNewAsset({...newAsset, environment: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      {environments.filter(z => z !== "All").map(z => <option key={z} value={z}>{z}</option>)}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsNewAssetEnvOpen(false); }}>
+                      <button type="button" onClick={() => setIsNewAssetEnvOpen(!isNewAssetEnvOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newAsset.environment || "Select environment"}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isNewAssetEnvOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isNewAssetEnvOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {environments.filter(z => z !== "All").map(z => (
+                            <button type="button" key={z} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newAsset.environment === z ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewAsset({...newAsset, environment: z}); setIsNewAssetEnvOpen(false); }}>{z}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Asset Type</label>
-                    <select value={newAsset.asset_type} onChange={e => setNewAsset({...newAsset, asset_type: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      {assetTypes.filter(z => z !== "All").map(z => <option key={z} value={z}>{z}</option>)}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsNewAssetTypeOpen(false); }}>
+                      <button type="button" onClick={() => setIsNewAssetTypeOpen(!isNewAssetTypeOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newAsset.asset_type || "Select type"}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isNewAssetTypeOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isNewAssetTypeOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {assetTypes.filter(z => z !== "All").map(z => (
+                            <button type="button" key={z} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newAsset.asset_type === z ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewAsset({...newAsset, asset_type: z}); setIsNewAssetTypeOpen(false); }}>{z}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Criticality</label>
-                    <select value={newAsset.criticality} onChange={e => setNewAsset({...newAsset, criticality: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      {criticalities.filter(z => z !== "All").map(z => <option key={z} value={z}>{z}</option>)}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsNewAssetCritOpen(false); }}>
+                      <button type="button" onClick={() => setIsNewAssetCritOpen(!isNewAssetCritOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{newAsset.criticality || "Select criticality"}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isNewAssetCritOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isNewAssetCritOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {criticalities.filter(z => z !== "All").map(z => (
+                            <button type="button" key={z} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${newAsset.criticality === z ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setNewAsset({...newAsset, criticality: z}); setIsNewAssetCritOpen(false); }}>{z}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -689,9 +747,19 @@ export default function AssetsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Assign to Network Zone</label>
-                    <select value={discoveryZone} onChange={e => setDiscoveryZone(e.target.value)} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors appearance-none">
-                      {zones.filter(z => z !== "All").map(z => <option key={z} value={z}>{z}</option>)}
-                    </select>
+                    <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDiscoveryZoneOpen(false); }}>
+                      <button type="button" onClick={() => setIsDiscoveryZoneOpen(!isDiscoveryZoneOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                        <span className="truncate pr-2">{discoveryZone || "Select zone"}</span>
+                        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isDiscoveryZoneOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isDiscoveryZoneOpen && (
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {zones.filter(z => z !== "All").map(z => (
+                            <button type="button" key={z} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${discoveryZone === z ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setDiscoveryZone(z); setIsDiscoveryZoneOpen(false); }}>{z}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1.5">Scanner Engine</label>

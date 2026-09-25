@@ -411,7 +411,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
           </button>
           <button 
             onClick={(e) => handleDeleteVuln(row.id, e)}
-            className="p-1.5 bg-critical/10 text-critical hover:bg-critical hover:text-white rounded-md transition-colors shadow-sm"
+            className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-md transition-all hover:scale-110 active:scale-95 shadow-sm"
             title="Delete Vulnerability"
           >
             <Trash2 className="w-4 h-4" />
@@ -486,7 +486,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
         action={
           <button 
             onClick={handleDeleteAllVulns}
-            className="flex items-center gap-2 px-4 py-2 bg-critical text-white rounded-lg hover:bg-critical/80 transition-colors text-sm font-medium shadow-lg shadow-critical/20"
+            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all hover:scale-105 active:scale-95 text-sm font-medium shadow-lg shadow-red-500/20"
           >
             <Trash2 className="w-4 h-4" />
             Delete All
