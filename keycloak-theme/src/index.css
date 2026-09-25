@@ -389,34 +389,38 @@ body {
 
 .feature-item {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  flex-direction: row;
+  align-items: flex-start;
+  text-align: left;
+  gap: 1rem;
 }
 .feature-icon-wrapper {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
   border-radius: 0.75rem;
   border: 1px solid rgba(18, 161, 56, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(18, 161, 56, 0.05);
-  margin-bottom: 1rem;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0;
+}
+.feature-text {
+  display: flex;
+  flex-direction: column;
 }
 .feature-title {
   font-weight: 600;
   font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   margin-top: 0;
   color: var(--text-main);
 }
 .feature-desc {
   font-size: 0.75rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
 }
 
