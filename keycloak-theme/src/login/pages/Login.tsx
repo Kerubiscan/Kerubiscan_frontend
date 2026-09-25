@@ -42,7 +42,7 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                         </div>
                     </div>
                     
-                    <div className="flex-none text-sm text-muted mt-auto pt-4">
+                    <div className="flex-none text-sm text-muted mt-auto pt-8">
                         © {new Date().getFullYear()} <span className="text-primary font-semibold">KERUBISCAN</span>. All rights reserved.
                     </div>
                 </div>
