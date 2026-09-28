@@ -8,7 +8,7 @@ import { Users, LayoutDashboard, ShieldCheck } from "lucide-react";
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const session = await getServerSession(authOptions);
-  
+
   if (!session || (session as any).error === "RefreshAccessTokenError") {
     redirect({ href: "/login", locale });
   }
@@ -46,9 +46,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <a 
+          <a
             href={keycloakConsoleUrl}
-            target="_blank" 
+            target="_blank"
             rel="noopener noreferrer"
             className="group p-8 bg-surface/80 backdrop-blur-xl border border-border hover:border-primary/50 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all flex flex-col items-center text-center cursor-pointer hover:-translate-y-1"
           >
@@ -61,16 +61,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             </p>
           </a>
 
-          <Link 
+          <Link
             href="/dashboard"
             className="group p-8 bg-surface/80 backdrop-blur-xl border border-border hover:border-primary/50 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all flex flex-col items-center text-center cursor-pointer hover:-translate-y-1"
           >
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <LayoutDashboard className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">KerubiScan Dashboard</h2>
+            <h2 className="text-2xl font-bold text-white mb-3">KVS Dashboard</h2>
             <p className="text-text-muted text-sm">
-              Access the vulnerability scanner dashboard to manage scans, policies, and view reports.
+              Access the kimia vulnerability scanner dashboard to manage scans, policies, and view reports.
             </p>
           </Link>
         </div>

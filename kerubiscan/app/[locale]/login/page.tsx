@@ -20,9 +20,9 @@ export default function LoginPage() {
           <Image src="/logo.svg" alt="KerubiScan Logo" width={80} height={80} className="object-contain" />
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">KerubiScan</h1>
+        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">KVS</h1>
         <p className="text-text-muted mb-8 text-sm">
-          Enterprise Vulnerability Management System
+          Kimia Vulnerability Scanner
         </p>
 
         <button
