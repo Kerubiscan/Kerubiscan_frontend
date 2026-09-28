@@ -153,7 +153,7 @@
       "selectScanLabel": "Sélectionner le scan :",
       "selectScanPlaceholder": "Sélectionner un scan",
       "scannerCompanyLabel": "Société d'audit :",
-      "scannerCompanyDefault": "Kerubiscan Security",
+      "scannerCompanyDefault": "KVS Security",
       "targetCompanyLabel": "Entreprise cible :",
       "targetCompanyDefault": "Client Company",
       "historyTitle": "Historique des scans terminés",

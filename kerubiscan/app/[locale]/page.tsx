@@ -70,7 +70,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">KVS Dashboard</h2>
             <p className="text-text-muted text-sm">
-              Access the kimia vulnerability scanner dashboard to manage scans, policies, and view reports.
+              Access the Kerubi Vulnerability Scanner dashboard to manage scans, policies, and view reports.
             </p>
           </Link>
         </div>

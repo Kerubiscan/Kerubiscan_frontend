@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kerubiscan - Vulnerability Scanner",
+  title: "KVS - Vulnerability Scanner",
   description: "Anticipez. Analysez. Sécurisez.",
   icons: {
     icon: "/logo.svg",

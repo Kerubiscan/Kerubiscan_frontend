@@ -54,7 +54,7 @@ export default function ReportsPage() {
       }
     }).catch(console.error);
     
-    const savedLang = localStorage.getItem("kerubiscan_default_language");
+    const savedLang = localStorage.getItem("KVS_default_language");
     if (savedLang) setLanguage(savedLang);
   }, []);
 
@@ -84,7 +84,7 @@ export default function ReportsPage() {
     try {
       const url = `/scans/${selectedScanId}/generate-summary`;
         
-      const provider = localStorage.getItem("kerubiscan_default_ai") || "ollama";
+      const provider = localStorage.getItem("KVS_default_ai") || "ollama";
       
       const res = await fetchApi<any>(url, {
         method: "POST",

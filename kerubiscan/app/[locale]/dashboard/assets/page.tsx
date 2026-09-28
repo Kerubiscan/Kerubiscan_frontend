@@ -108,7 +108,7 @@ export default function AssetsPage() {
         await fetchApi("/scans", {
           method: "POST",
           body: JSON.stringify({
-            company_name: "KerubiScan",
+            company_name: "KVS",
             target: discoverySubnet,
             network_zone: discoveryZone,
             scan_type: "DISCOVERY",
@@ -190,7 +190,7 @@ export default function AssetsPage() {
       await fetchApi("/scans", {
         method: "POST",
         body: JSON.stringify({
-          company_name: "KerubiScan",
+          company_name: "KVS",
           target: targetString,
           network_zone: "Internal",
           scan_type: "VULNERABILITY",

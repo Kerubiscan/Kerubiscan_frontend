@@ -17,12 +17,12 @@ export default function LoginPage() {
       <div className="z-10 w-full max-w-md p-8 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
 
         <div className="w-20 h-20 flex items-center justify-center mb-6">
-          <Image src="/logo.svg" alt="KerubiScan Logo" width={80} height={80} className="object-contain" />
+          <Image src="/logo.svg" alt="KVS Logo" width={80} height={80} className="object-contain" />
         </div>
 
         <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">KVS</h1>
         <p className="text-text-muted mb-8 text-sm">
-          Kimia Vulnerability Scanner
+          Kerubi Vulnerability Scanner
         </p>
 
         <button

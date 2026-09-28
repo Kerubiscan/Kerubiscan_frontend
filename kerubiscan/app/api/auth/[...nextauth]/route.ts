@@ -23,8 +23,8 @@ function getDynamicAuthOptions(req?: NextRequest): AuthOptions {
         client: {
           token_endpoint_auth_method: "client_secret_post",
         },
-        clientId: process.env.KEYCLOAK_CLIENT_ID || "kerubiscan-web",
-        clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || "kerubiscan-web-secret",
+        clientId: process.env.KEYCLOAK_CLIENT_ID || "KVS-web",
+        clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || "KVS-web-secret",
         authorization: {
           url: `${keycloakPublicUrl}/realms/${realm}/protocol/openid-connect/auth`,
           params: { scope: "openid email profile" },

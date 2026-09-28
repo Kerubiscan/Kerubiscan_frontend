@@ -20,18 +20,18 @@ export default function SettingsPage() {
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedAi = localStorage.getItem("kerubiscan_default_ai");
-    const savedScanner = localStorage.getItem("kerubiscan_default_scanner");
-    const savedLanguage = localStorage.getItem("kerubiscan_default_language");
+    const savedAi = localStorage.getItem("KVS_default_ai");
+    const savedScanner = localStorage.getItem("KVS_default_scanner");
+    const savedLanguage = localStorage.getItem("KVS_default_language");
     if (savedAi) setDefaultAi(savedAi);
     if (savedScanner) setDefaultScanner(savedScanner);
     if (savedLanguage) setDefaultLanguage(savedLanguage);
   }, []);
 
   const handleSave = () => {
-    localStorage.setItem("kerubiscan_default_ai", defaultAi);
-    localStorage.setItem("kerubiscan_default_scanner", defaultScanner);
-    localStorage.setItem("kerubiscan_default_language", defaultLanguage);
+    localStorage.setItem("KVS_default_ai", defaultAi);
+    localStorage.setItem("KVS_default_scanner", defaultScanner);
+    localStorage.setItem("KVS_default_language", defaultLanguage);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };

@@ -191,8 +191,8 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
     if (!selectedVuln) return;
     setIsGeneratingAI(true);
     try {
-      const provider = localStorage.getItem("kerubiscan_default_ai") || "ollama";
-      const defaultLang = localStorage.getItem("kerubiscan_default_language");
+      const provider = localStorage.getItem("KVS_default_ai") || "ollama";
+      const defaultLang = localStorage.getItem("KVS_default_language");
       const resolvedLang = defaultLang ? defaultLang : (locale === 'fr' ? 'French' : 'English');
       
       const res = await fetchApi<any>(`/vulnerabilities/${selectedVuln.id}/generate-remediation`, {

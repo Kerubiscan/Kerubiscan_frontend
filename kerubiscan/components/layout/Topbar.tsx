@@ -53,7 +53,7 @@ export function Topbar() {
   }, [t]);
 
   const handleHelpClick = () => {
-    alert("KerubiScan v1.0\n\nBesoin d'aide ?\nVeuillez consulter la documentation interne ou contacter votre administrateur système pour plus de détails sur le fonctionnement du scanner de vulnérabilités.");
+    alert("KVS v1.0\n\nBesoin d'aide ?\nVeuillez consulter la documentation interne ou contacter votre administrateur système pour plus de détails sur le fonctionnement du scanner de vulnérabilités.");
   };
 
   const handleSignOut = async () => {
