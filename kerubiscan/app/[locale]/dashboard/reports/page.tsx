@@ -166,6 +166,39 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDownloadPdf = async (scanIdToDownload?: number) => {
+    const id = scanIdToDownload || selectedScanId;
+    if (!id) return;
+    try {
+      const response = await fetch(`/api/v1/scans/${id}/report/pdf`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${(await import("next-auth/react").then(m => m.getSession()))?.accessToken as string ?? ""}`,
+        },
+        body: JSON.stringify({
+          language: language,
+          executive_summary: aiSummary || undefined
+        })
+      });
+      if (!response.ok) {
+        toast.error(`Failed to download PDF report: ${response.status} ${response.statusText}`);
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `report_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Failed to download PDF report");
+    }
+  };
+
   const handleDeleteReport = async (id: number) => {
     if (!confirm("Are you sure you want to delete this report and its scan?")) return;
     try {
@@ -238,8 +271,17 @@ export default function ReportsPage() {
             onClick={() => handleDownloadHtml(row.id)}
             disabled={row.status !== "COMPLETED"}
             className={`flex items-center gap-1 transition-colors ${row.status === "COMPLETED" ? "text-primary hover:text-primary-hover" : "text-gray-400 cursor-not-allowed"}`}
+            title="Download HTML"
           >
-            <Download className="w-4 h-4" /> {t("downloadAction")}
+            <Download className="w-4 h-4" /> HTML
+          </button>
+          <button 
+            onClick={() => handleDownloadPdf(row.id)}
+            disabled={row.status !== "COMPLETED"}
+            className={`flex items-center gap-1 transition-colors ${row.status === "COMPLETED" ? "text-red-500 hover:text-red-600" : "text-gray-400 cursor-not-allowed"}`}
+            title="Download PDF"
+          >
+            <Download className="w-4 h-4" /> PDF
           </button>
           <button 
             onClick={() => handleDeleteReport(row.id)}
@@ -276,6 +318,14 @@ export default function ReportsPage() {
             >
               <FileText className="w-4 h-4" />
               Download HTML
+            </button>
+            <button 
+              onClick={() => handleDownloadPdf()} 
+              disabled={!selectedScanId || selectedScan?.status !== "COMPLETED"}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              Download PDF
             </button>
           </div>
         }
