@@ -19,17 +19,18 @@ Built with **Next.js (App Router)** and **Tailwind CSS**, it acts as the primary
 ## 📁 Project Structure
 
 ```text
-kerubiscan/
-├── app/
-│   └── [locale]/               # Next.js App Router with i18n support
-│       ├── (auth)/             # Login and authentication routes
-│       └── dashboard/          # Main application interface (Scans, Assets, Reports, Policies)
-├── components/                 # Reusable UI components
-│   ├── layout/                 # Sidebar, Header, Navigation
-│   └── ui/                     # Buttons, Modals, DataTables, Charts
-├── lib/                        # Utilities, API wrappers (fetchApi), and hooks
-├── messages/                   # Translation JSON files (en.json, fr.json)
-└── public/                     # Static assets, branding, and images
+kerubiscan_frontend/
+├── kerubiscan/                 # Main Next.js App Router application
+│   ├── app/
+│   │   └── [locale]/           # i18n routes (auth, dashboard, scans, policies)
+│   ├── components/             # Reusable UI components (layout, ui elements)
+│   ├── lib/                    # API wrappers (fetchApi), hooks, and utilities
+│   ├── messages/               # Translation JSON files (en.json, fr.json)
+│   └── public/                 # Static assets, branding, and images
+└── keycloak-theme/             # Custom Keycloakify Theme for authentication pages
+    ├── src/                    # Theme source code (React components)
+    ├── package.json            # Theme dependencies and build scripts
+    └── dist_keycloak/          # Generated Keycloak .jar and static assets (output)
 ```
 
 ## 🚀 Setup & Installation
@@ -59,7 +60,30 @@ KEYCLOAK_REALM=kimia
    ```
 3. Open `http://localhost:9443` in your browser.
 
-*Note: In production environments, the frontend is served via a standalone Next.js Docker container which proxies `/api/v1` traffic to the backend API.*
+### Keycloak Theme Setup
+
+The `keycloak-theme` directory contains a custom **Keycloakify** theme used for the authentication pages (Login, Register, Forgot Password).
+
+1. Navigate to the theme directory:
+   ```bash
+   cd keycloak-theme
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. To test the theme locally in Storybook or a local Keycloak instance:
+   ```bash
+   npm run storybook
+   ```
+4. **To Build for Production**: Run the build command to generate the theme:
+   ```bash
+   npm run build-keycloak-theme
+   ```
+   This will output the compiled theme into the `dist_keycloak/` folder.
+5. The `docker-compose.yml` in the deployment repository automatically mounts this `dist_keycloak` directory into the Keycloak container (`/opt/keycloak/providers`), so the compiled theme is instantly available to the authentication server.
+
+*Note: In production environments, the frontend app is served via a standalone Next.js Docker container which proxies `/api/v1` traffic to the backend API.*
 
 ## 🎨 UI/UX Design
 
