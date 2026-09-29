@@ -41,8 +41,8 @@ kerubiscan/
 ### Environment Variables
 The application relies on several environment variables defined in `.env`:
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-NEXTAUTH_URL=http://localhost:3000
+BACKEND_API_URL=http://localhost:9445
+NEXTAUTH_URL=http://localhost:9443
 KEYCLOAK_CLIENT_ID=KVS-web
 KEYCLOAK_REALM=kimia
 ```
@@ -57,7 +57,7 @@ KEYCLOAK_REALM=kimia
    ```bash
    npm run dev
    ```
-3. Open `http://localhost:3000` in your browser.
+3. Open `http://localhost:9443` in your browser.
 
 *Note: In production environments, the frontend is served via a standalone Next.js Docker container which proxies `/api/v1` traffic to the backend API.*
 
