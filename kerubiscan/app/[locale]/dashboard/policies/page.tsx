@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
-import { ShieldPlus, ChevronDown, Eye, X, Loader2 } from "lucide-react";
+import { ShieldPlus, ChevronDown, Eye, X, Loader2, Pencil, Trash2 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
 export default function PoliciesPage() {
@@ -16,7 +16,9 @@ export default function PoliciesPage() {
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [editingPolicy, setEditingPolicy] = useState<any>(null);
 
   // Modal dropdowns
   const [isModalTypeOpen, setIsModalTypeOpen] = useState(false);
@@ -90,6 +92,42 @@ export default function PoliciesPage() {
     }
   };
 
+  const handleUpdatePolicy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await fetchApi(`/policies/${editingPolicy.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: editingPolicy.name,
+          scan_type: editingPolicy.scan_type,
+          company_id: editingPolicy.company_id ? parseInt(editingPolicy.company_id) : null,
+          port_scanning_range: editingPolicy.port_scanning_range,
+          safe_checks: editingPolicy.safe_checks,
+          concurrent_hosts: parseInt(editingPolicy.concurrent_hosts as any),
+          concurrent_checks: parseInt(editingPolicy.concurrent_checks as any)
+        })
+      });
+      setIsEditModalOpen(false);
+      setEditingPolicy(null);
+      loadData();
+    } catch (err) {
+      console.error("Failed to update policy", err);
+      alert("Failed to update policy");
+    }
+  };
+
+  const handleDeletePolicy = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this policy?")) return;
+    try {
+      await fetchApi(`/policies/${id}`, { method: "DELETE" });
+      loadData();
+    } catch (err) {
+      console.error("Failed to delete policy", err);
+      alert("Failed to delete policy");
+    }
+  };
+
   const getCompanyName = (id: string) => {
     if (!id) return "-";
     const c = companiesData.find(c => c.id === id);
@@ -122,13 +160,29 @@ export default function PoliciesPage() {
     {
       header: t("colActions"),
       accessor: (row: any) => (
-        <button 
-          onClick={(e) => { e.stopPropagation(); setSelectedPolicy(row); setIsViewModalOpen(true); }}
-          className="p-1 text-text-muted hover:text-primary transition-colors"
-          title={t("colActions")}
-        >
-          <Eye className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={(e) => { e.stopPropagation(); setSelectedPolicy(row); setIsViewModalOpen(true); }}
+            className="p-1 text-text-muted hover:text-primary transition-colors"
+            title={t("colActions")}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setEditingPolicy({...row}); setIsEditModalOpen(true); }}
+            className="p-1 text-text-muted hover:text-blue-500 transition-colors"
+            title="Edit Policy"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={(e) => handleDeletePolicy(row.id, e)}
+            className="p-1 text-text-muted hover:text-red-500 transition-colors"
+            title="Delete Policy"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       )
     }
   ];
@@ -331,6 +385,92 @@ export default function PoliciesPage() {
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-base rounded-lg transition-colors">{t("cancel")}</button>
                 <button type="submit" className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                   <ShieldPlus className="w-4 h-4" /> {t("savePolicy")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Policy Modal */}
+      {isEditModalOpen && editingPolicy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface border border-border rounded-xl w-full max-w-lg shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border/50">
+              <h3 className="font-semibold text-lg">Edit Policy</h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-text-muted hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdatePolicy} className="p-5 flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-muted mb-1.5">{t("policyNameLabel")}</label>
+                <input required value={editingPolicy.name} onChange={e => setEditingPolicy({...editingPolicy, name: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder="e.g. Default Full Scan" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{t("policyTypeLabel")}</label>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalTypeOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalTypeOpen(!isModalTypeOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{editingPolicy.scan_type}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalTypeOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalTypeOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {["Full and fast", "Web App", "Compliance", "Network Discovery"].map(t => (
+                          <button type="button" key={t} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${editingPolicy.scan_type === t ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setEditingPolicy({...editingPolicy, scan_type: t}); setIsModalTypeOpen(false); }}>{t}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-muted mb-1.5">{common("colCompany")}</label>
+                  <div className="relative" tabIndex={0} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsModalCompanyOpen(false); }}>
+                    <button type="button" onClick={() => setIsModalCompanyOpen(!isModalCompanyOpen)} className="flex items-center justify-between w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors">
+                      <span className="truncate pr-2">{editingPolicy.company_id ? companiesData.find(c => String(c.id) === String(editingPolicy.company_id))?.name : common("allCompanies")}</span>
+                      <ChevronDown className={`w-4 h-4 text-text-muted transition-transform shrink-0 ${isModalCompanyOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isModalCompanyOpen && (
+                      <div className="absolute z-10 top-full left-0 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg overflow-y-auto max-h-48 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <button type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${!editingPolicy.company_id ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setEditingPolicy({...editingPolicy, company_id: ""}); setIsModalCompanyOpen(false); }}>{common("allCompanies")}</button>
+                        {companiesData.map(c => (
+                          <button type="button" key={c.id} className={`w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors ${String(editingPolicy.company_id) === String(c.id) ? "bg-primary/10 text-primary font-medium" : "text-text-main"}`} onClick={() => { setEditingPolicy({...editingPolicy, company_id: String(c.id)}); setIsModalCompanyOpen(false); }}>{c.name}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold uppercase tracking-wider text-text-muted border-b border-border/50 pb-2">Policy Configuration</h4>
+                
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1.5">Port Scanning Range</label>
+                    <input required value={editingPolicy.port_scanning_range} onChange={e => setEditingPolicy({...editingPolicy, port_scanning_range: e.target.value})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" placeholder="e.g. 1-65535" />
+                  </div>
+                  <div className="flex flex-col justify-end">
+                    <label className="flex items-center gap-2 cursor-pointer py-2">
+                      <input type="checkbox" checked={editingPolicy.safe_checks} onChange={e => setEditingPolicy({...editingPolicy, safe_checks: e.target.checked})} className="rounded bg-base border-border text-primary focus:ring-primary h-4 w-4" />
+                      <span className="text-sm font-medium text-text-muted">Safe Checks Enabled</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1.5">Concurrent Hosts</label>
+                    <input type="number" required min="1" value={editingPolicy.concurrent_hosts} onChange={e => setEditingPolicy({...editingPolicy, concurrent_hosts: parseInt(e.target.value) || 20})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1.5">Concurrent Checks per Host</label>
+                    <input type="number" required min="1" value={editingPolicy.concurrent_checks} onChange={e => setEditingPolicy({...editingPolicy, concurrent_checks: parseInt(e.target.value) || 10})} className="w-full bg-base border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-base rounded-lg transition-colors">{t("cancel")}</button>
+                <button type="submit" className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                  <ShieldPlus className="w-4 h-4" /> Update Policy
                 </button>
               </div>
             </form>
