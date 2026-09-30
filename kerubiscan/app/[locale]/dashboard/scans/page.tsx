@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Play, ChevronDown, Edit, Trash2, RotateCw, Eye, Layers } from "lucide-react";
+import { Play, Pause, ChevronDown, Edit, Trash2, RotateCw, Eye, Layers } from "lucide-react";
 import { NewScanModal } from "@/components/scans/NewScanModal";
 import { EditScanModal } from "@/components/scans/EditScanModal";
 import { ViewScanModal } from "@/components/scans/ViewScanModal";
@@ -142,6 +142,25 @@ export default function ScansPage() {
     }
   };
 
+
+  const handlePause = async (id: string) => {
+    try {
+      await fetchApi(`/scans/${id}/pause`, { method: "PUT" });
+      fetchScans();
+    } catch (err: any) {
+      alert(err.message || "Failed to pause scan.");
+    }
+  };
+
+  const handleResume = async (id: string) => {
+    try {
+      await fetchApi(`/scans/${id}/resume`, { method: "PUT" });
+      fetchScans();
+    } catch (err: any) {
+      alert(err.message || "Failed to resume scan.");
+    }
+  };
+
   const columns = [
     {
       header: t("nameCol"),
@@ -187,6 +206,7 @@ export default function ScansPage() {
       accessor: (row: any) => {
         let variant = "info";
         if (row.status === "COMPLETED") variant = "success";
+        if (row.status === "PAUSED") variant = "neutral";
         if (row.status === "FAILED") variant = "critical";
         if (row.status === "IN_PROGRESS" || row.status === "PENDING") variant = "warning";
 
@@ -196,6 +216,7 @@ export default function ScansPage() {
         let statusLabel = row.status;
         if (row.status === "PENDING") statusLabel = t("statusPending");
         if (row.status === "IN_PROGRESS") statusLabel = t("statusInProgress");
+        if (row.status === "PAUSED") statusLabel = "Paused";
         if (row.status === "COMPLETED") statusLabel = t("statusCompleted");
         if (row.status === "FAILED") statusLabel = t("statusFailed");
 
@@ -215,6 +236,17 @@ export default function ScansPage() {
           </button>
           {canModify(session as any) && (
             <>
+              
+              {row.status === "IN_PROGRESS" || row.status === "PENDING" ? (
+                <button onClick={() => handlePause(row.id)} className="p-1 text-text-muted hover:text-status-warning transition-colors" title="Pause Scan">
+                  <Pause className="w-4 h-4" />
+                </button>
+              ) : null}
+              {row.status === "PAUSED" ? (
+                <button onClick={() => handleResume(row.id)} className="p-1 text-text-muted hover:text-status-success transition-colors" title="Resume Scan">
+                  <Play className="w-4 h-4" />
+                </button>
+              ) : null}
               <button onClick={() => { setSelectedScan(row); setIsEditModalOpen(true); }} className="p-1 text-text-muted hover:text-white transition-colors" title={t("edit") || "Edit"}>
                 <Edit className="w-4 h-4" />
               </button>
