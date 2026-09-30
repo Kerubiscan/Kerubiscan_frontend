@@ -6,15 +6,6 @@ import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
 import { Providers } from '@/src/components/Providers';
 
-// Using system fonts to prevent Docker build errors with next/font/google
-const geistSans = {
-  variable: "--font-geist-sans",
-};
-
-const geistMono = {
-  variable: "--font-geist-mono",
-};
-
 export const metadata: Metadata = {
   title: "KVS - Vulnerability Scanner",
   description: "Anticipez. Analysez. Sécurisez.",
@@ -42,7 +33,20 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={locale} className="h-full antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet" />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            :root {
+              --font-geist-sans: 'Geist', sans-serif;
+              --font-geist-mono: 'Geist Mono', monospace;
+            }
+          `
+        }} />
+      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Providers>
           <NextIntlClientProvider messages={messages}>
