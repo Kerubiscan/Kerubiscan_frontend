@@ -775,6 +775,21 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
             <div className="p-6 overflow-y-auto flex-1 space-y-6">
               <div className="flex items-center gap-3">
                  <StatusBadge status={selectedVuln.severity.toLowerCase() as any} label={getSeverityTranslation(selectedVuln.severity)} />
+                 
+                 <select 
+                    value={selectedVuln.status}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      updateStatus(selectedVuln.id, newStatus);
+                      setSelectedVuln({...selectedVuln, status: newStatus});
+                    }}
+                    className="bg-base border border-border rounded-md text-xs px-3 py-1 font-medium text-text-main cursor-pointer hover:border-primary transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                 >
+                    {["New", "In Progress", "Risk Accepted", "Fixed", "False Positive"].map(s => (
+                      <option key={s} value={s}>{getStatusTranslation(s)}</option>
+                    ))}
+                 </select>
+
                  <span className="text-sm font-medium text-text-muted">{selectedVuln.cve}</span>
                  <span className="text-sm font-mono ml-auto">CVSS: {selectedVuln.score}</span>
               </div>
