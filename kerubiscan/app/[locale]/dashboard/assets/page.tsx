@@ -866,11 +866,23 @@ export default function AssetsPage() {
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50 col-span-2">
                     <p className="text-xs text-text-muted mb-1">Open Ports</p>
-                    <p className="font-medium text-sm break-all">{selectedAsset.ports || "None detected"}</p>
+                    <p className="font-medium text-sm break-all">
+                      {Array.isArray(selectedAsset.ports) 
+                        ? selectedAsset.ports.map((p: any) => p.port || p).join(', ')
+                        : (typeof selectedAsset.ports === 'object' && selectedAsset.ports !== null 
+                            ? JSON.stringify(selectedAsset.ports) 
+                            : selectedAsset.ports || "None detected")}
+                    </p>
                   </div>
                   <div className="bg-base p-3 rounded-lg border border-border/50 col-span-2">
                     <p className="text-xs text-text-muted mb-1">Running Services & Versions</p>
-                    <p className="font-medium text-sm break-all whitespace-pre-wrap">{selectedAsset.services || "None detected"}</p>
+                    <p className="font-medium text-sm break-all whitespace-pre-wrap">
+                      {Array.isArray(selectedAsset.services) 
+                        ? selectedAsset.services.map((s: any) => typeof s === 'object' ? JSON.stringify(s) : s).join(', ')
+                        : (typeof selectedAsset.services === 'object' && selectedAsset.services !== null 
+                            ? JSON.stringify(selectedAsset.services) 
+                            : selectedAsset.services || "None detected")}
+                    </p>
                   </div>
                 </div>
               </div>
