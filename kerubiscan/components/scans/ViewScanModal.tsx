@@ -11,6 +11,8 @@ interface Scan {
   network_zone: string | null;
   scanner_engine: string;
   target_states?: Record<string, string>;
+  // Reason and timestamps per target, recorded by the backend (failure, timeout, OpenVAS queue...)
+  target_details?: Record<string, { detail?: string; started_at?: string; updated_at?: string }> | null;
   created_at?: string;
 }
 
@@ -26,6 +28,7 @@ const TONES: Record<Tone, string> = {
 // Per-target outcome reported by the backend. "No vulnerability" and "not scanned" are distinct.
 const TARGET_STATES: Record<string, { label: string; hint: string; tone: Tone }> = {
   PENDING: { label: "En attente", hint: "", tone: "info" },
+  QUEUED: { label: "En file d'attente", hint: "Accepté par OpenVAS, en attente d'un créneau libre (d'autres scans sont en cours).", tone: "warning" },
   IN_PROGRESS: { label: "En cours", hint: "", tone: "warning" },
   COMPLETED: { label: "Scanné", hint: "", tone: "success" },
   NO_OPEN_PORTS: { label: "Aucun port ouvert", hint: "L'hôte répond mais aucun service n'a pu être testé.", tone: "warning" },
@@ -125,6 +128,14 @@ export function ViewScanModal({ isOpen, onClose, scan, companies = [] }: ViewSca
                         </span>
                       </div>
                       {state.hint && <p className="text-[11px] text-text-muted mt-0.5">{state.hint}</p>}
+                      {scan.target_details?.[ip]?.detail && (
+                        <p className="text-[11px] text-text-main mt-0.5">Raison : {scan.target_details[ip].detail}</p>
+                      )}
+                      {scan.target_details?.[ip]?.updated_at && !["COMPLETED", "PENDING"].includes(status) && (
+                        <p className="text-[10px] text-text-muted mt-0.5">
+                          Dernière activité : {new Date(scan.target_details[ip].updated_at as string).toLocaleString()}
+                        </p>
+                      )}
                     </div>
                   );
                 })}
