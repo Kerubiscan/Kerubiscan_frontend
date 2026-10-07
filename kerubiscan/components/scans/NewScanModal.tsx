@@ -17,7 +17,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
   const [companyName, setCompanyName] = useState("");
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   
-  const [scanType, setScanType] = useState("DISCOVERY");
+  const [scanType, setScanType] = useState("VULNERABILITY");
   const [target, setTarget] = useState("");
   const [networkZone, setNetworkZone] = useState("");
   const [scannerEngine, setScannerEngine] = useState("NMAP");
@@ -194,15 +194,19 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
               <button
                 type="button"
                 className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${scanType === "WEB_APP" ? "bg-primary/10 border-primary text-primary" : "bg-base border-border text-text-muted hover:border-primary/50"}`}
-                onClick={() => setScanType("WEB_APP")}
+                onClick={() => {
+                  setScanType("WEB_APP");
+                  // Web application tests need a web engine
+                  if (!["OWASP_ZAP", "NUCLEI"].includes(scannerEngine)) setScannerEngine("OWASP_ZAP");
+                }}
               >
                 Application Scan
               </button>
             </div>
             <p className="text-xs text-text-muted mt-1">
-              {scanType === "DISCOVERY" ? "Provide a gateway (e.g. 10.0.0.0/24) to discover assets." : 
-               scanType === "WEB_APP" ? "Provide a web application URL (e.g. https://example.com) to scan." :
-               "Provide an asset IP (e.g. 192.168.1.10) or subnet (e.g. 10.0.0.0/24) to scan."}
+              {scanType === "DISCOVERY" ? "Finds hosts only, without testing vulnerabilities. Targets: IP, subnet (e.g. 10.0.0.0/24) or domain." :
+               scanType === "WEB_APP" ? "Tests a web application with OWASP ZAP or Nuclei. Target: a domain (example.com) or a precise URL (https://example.com:8443/app)." :
+               "Targets: IPs, subnets or domains, comma separated (e.g. 192.168.1.10, example.com, www.example.com)."}
             </p>
           </div>
 
@@ -211,7 +215,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
             <input 
               type="text" 
               className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              placeholder={scanType === "DISCOVERY" ? "10.0.0.0/24" : scanType === "WEB_APP" ? "https://example.com" : "192.168.1.10 or 10.0.0.0/24"}
+              placeholder={scanType === "DISCOVERY" ? "10.0.0.0/24" : scanType === "WEB_APP" ? "example.com or https://example.com/app" : "192.168.1.10, 10.0.0.0/24, example.com"}
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               required
