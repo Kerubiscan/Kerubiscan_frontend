@@ -11,8 +11,35 @@ interface Scan {
   network_zone: string | null;
   scanner_engine: string;
   target_states?: Record<string, string>;
+  // Reason and timestamps per target, recorded by the backend (failure, timeout, OpenVAS queue...)
+  target_details?: Record<string, { detail?: string; started_at?: string; updated_at?: string }> | null;
   created_at?: string;
 }
+
+type Tone = "success" | "warning" | "critical" | "info";
+
+const TONES: Record<Tone, string> = {
+  success: "bg-status-success/10 text-status-success",
+  warning: "bg-status-warning/10 text-status-warning",
+  critical: "bg-status-critical/10 text-status-critical",
+  info: "bg-status-info/10 text-status-info",
+};
+
+// Per-target outcome reported by the backend. "No vulnerability" and "not scanned" are distinct.
+const TARGET_STATES: Record<string, { label: string; hint: string; tone: Tone }> = {
+  PENDING: { label: "En attente", hint: "", tone: "info" },
+  QUEUED: { label: "En file d'attente", hint: "Accepté par OpenVAS, en attente d'un créneau libre (d'autres scans sont en cours).", tone: "warning" },
+  IN_PROGRESS: { label: "En cours", hint: "", tone: "warning" },
+  COMPLETED: { label: "Scanné", hint: "", tone: "success" },
+  NO_OPEN_PORTS: { label: "Aucun port ouvert", hint: "L'hôte répond mais aucun service n'a pu être testé.", tone: "warning" },
+  NO_WEB_SERVICE: { label: "Aucun service web", hint: "Aucun service HTTP(S) trouvé : rien à tester pour ce moteur web.", tone: "warning" },
+  TIMEOUT: { label: "Délai dépassé", hint: "Le scan n'a pas pu se terminer (lien lent, pare-feu ou WAF). Résultats incomplets.", tone: "critical" },
+  HOST_UNREACHABLE: { label: "Injoignable", hint: "Résolution DNS impossible ou hôte injoignable : non scanné.", tone: "critical" },
+  INVALID_TARGET: { label: "Cible invalide", hint: "Format non reconnu : IP, réseau, domaine ou URL http(s).", tone: "critical" },
+  INTERRUPTED: { label: "Interrompu", hint: "Le scan OpenVAS a été arrêté : résultats partiels.", tone: "critical" },
+  FAILED: { label: "Échec", hint: "Le moteur a échoué : non scanné. Consultez les logs du worker.", tone: "critical" },
+  ABANDONED: { label: "Échec", hint: "Le moteur a échoué : non scanné.", tone: "critical" },
+};
 
 interface Company {
   id: string;
@@ -90,19 +117,28 @@ export function ViewScanModal({ isOpen, onClose, scan, companies = [] }: ViewSca
                 <Activity className="w-4 h-4 text-primary" /> Multi-Target Status
               </h3>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {Object.entries(scan.target_states).map(([ip, status]) => (
-                  <div key={ip} className="flex items-center justify-between border-b border-border/20 pb-1 last:border-0 last:pb-0">
-                    <span className="text-xs font-mono text-text-muted">{ip}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      status === "COMPLETED" ? "bg-status-success/10 text-status-success" :
-                      status === "FAILED" ? "bg-status-critical/10 text-status-critical" :
-                      status === "IN_PROGRESS" ? "bg-status-warning/10 text-status-warning" :
-                      "bg-status-info/10 text-status-info"
-                    }`}>
-                      {status}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(scan.target_states).map(([ip, status]) => {
+                  const state = TARGET_STATES[status] ?? { label: status, hint: "", tone: "info" as const };
+                  return (
+                    <div key={ip} className="border-b border-border/20 pb-1 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-mono text-text-muted break-all">{ip}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${TONES[state.tone]}`}>
+                          {state.label}
+                        </span>
+                      </div>
+                      {state.hint && <p className="text-[11px] text-text-muted mt-0.5">{state.hint}</p>}
+                      {scan.target_details?.[ip]?.detail && (
+                        <p className="text-[11px] text-text-main mt-0.5">Raison : {scan.target_details[ip].detail}</p>
+                      )}
+                      {scan.target_details?.[ip]?.updated_at && !["COMPLETED", "PENDING"].includes(status) && (
+                        <p className="text-[10px] text-text-muted mt-0.5">
+                          Dernière activité : {new Date(scan.target_details[ip].updated_at as string).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
