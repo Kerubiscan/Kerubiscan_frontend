@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Play, Pause, ChevronDown, Edit, Trash2, RotateCw, Eye, Layers } from "lucide-react";
+import { Play, Pause, Square, ChevronDown, Edit, Trash2, RotateCw, Eye, Layers } from "lucide-react";
 import { NewScanModal } from "@/components/scans/NewScanModal";
 import { EditScanModal } from "@/components/scans/EditScanModal";
 import { ViewScanModal } from "@/components/scans/ViewScanModal";
@@ -30,6 +30,22 @@ interface Scan {
   network_zone: string | null;
   scanner_engine: string;
   created_at?: string;
+  started_at?: string | null;
+  finished_at?: string | null;
+  duration_seconds?: number | null;
+}
+
+const ACTIVE_STATUSES = ["PENDING", "IN_PROGRESS", "PAUSED"];
+
+/** "45 s", "19 min 04 s", "2 h 05 min" */
+function formatDuration(seconds?: number | null): string {
+  if (seconds === null || seconds === undefined || seconds < 0) return "-";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h} h ${String(m).padStart(2, "0")} min`;
+  if (m > 0) return `${m} min ${String(s).padStart(2, "0")} s`;
+  return `${s} s`;
 }
 
 export default function ScansPage() {
@@ -62,8 +78,8 @@ export default function ScansPage() {
     }
   };
 
-  const fetchScans = async () => {
-    setLoading(true);
+  const fetchScans = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       let url = selectedCompany ? `/scans?company_id=${selectedCompany}` : "/scans";
       if (selectedZone) {
@@ -85,6 +101,14 @@ export default function ScansPage() {
   useEffect(() => {
     fetchScans();
   }, [selectedCompany, selectedZone]);
+
+  // Refresh the percentage and elapsed time while a scan is running
+  const hasActiveScan = scans.some((s) => s.status === "IN_PROGRESS" || s.status === "PENDING");
+  useEffect(() => {
+    if (!hasActiveScan) return;
+    const timer = setInterval(() => fetchScans(true), 10000);
+    return () => clearInterval(timer);
+  }, [hasActiveScan, selectedCompany, selectedZone]);
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this scan?")) {
@@ -152,6 +176,16 @@ export default function ScansPage() {
     }
   };
 
+  const handleStop = async (id: string) => {
+    if (!confirm(t("stopConfirm"))) return;
+    try {
+      await fetchApi(`/scans/${id}/stop`, { method: "PUT" });
+      fetchScans();
+    } catch (err: any) {
+      alert(err.message || "Failed to stop scan.");
+    }
+  };
+
   const handleResume = async (id: string) => {
     try {
       await fetchApi(`/scans/${id}/resume`, { method: "PUT" });
@@ -210,8 +244,9 @@ export default function ScansPage() {
         if (row.status === "FAILED") variant = "critical";
         if (row.status === "IN_PROGRESS" || row.status === "PENDING") variant = "warning";
 
-        const isProgress = row.status === "IN_PROGRESS";
-        const progress = row.progress || 0;
+        // Percentage of the scan (100 % once finished, whatever the outcome)
+        const isActive = ACTIVE_STATUSES.includes(row.status);
+        const progress = isActive ? Math.min(Math.max(row.progress || 0, 0), 100) : 100;
 
         let statusLabel = row.status;
         if (row.status === "PENDING") statusLabel = t("statusPending");
@@ -223,8 +258,34 @@ export default function ScansPage() {
         return (
           <div className="flex items-center gap-3">
             <StatusBadge status={variant as any} label={statusLabel} />
+            <div className="flex items-center gap-2 min-w-[90px]" title={`${progress} %`}>
+              <div className="w-14 h-1.5 bg-border rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${row.status === "FAILED" ? "bg-status-critical" : row.status === "COMPLETED" ? "bg-status-success" : "bg-status-warning"}`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium tabular-nums text-text-muted">{progress} %</span>
+            </div>
           </div>
         );
+      }
+    },
+    {
+      header: t("endCol"),
+      accessor: (row: any) => {
+        if (row.finished_at) {
+          return (
+            <div className="flex flex-col">
+              <span>{new Date(row.finished_at).toLocaleString()}</span>
+              <span className="text-xs text-text-muted">{formatDuration(row.duration_seconds)}</span>
+            </div>
+          );
+        }
+        if (row.status === "IN_PROGRESS" && row.duration_seconds !== null && row.duration_seconds !== undefined) {
+          return <span className="text-xs text-text-muted">{formatDuration(row.duration_seconds)} {t("elapsed")}</span>;
+        }
+        return "-";
       }
     },
     {
@@ -240,6 +301,11 @@ export default function ScansPage() {
               {row.status === "IN_PROGRESS" || row.status === "PENDING" ? (
                 <button onClick={() => handlePause(row.id)} className="p-1 text-text-muted hover:text-status-warning transition-colors" title="Pause Scan">
                   <Pause className="w-4 h-4" />
+                </button>
+              ) : null}
+              {ACTIVE_STATUSES.includes(row.status) ? (
+                <button onClick={() => handleStop(row.id)} className="p-1 text-text-muted hover:text-status-critical transition-colors" title={t("stop")}>
+                  <Square className="w-4 h-4" />
                 </button>
               ) : null}
               {row.status === "PAUSED" ? (
