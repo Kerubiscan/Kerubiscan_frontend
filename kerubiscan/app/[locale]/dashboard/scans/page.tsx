@@ -255,19 +255,26 @@ export default function ScansPage() {
         if (row.status === "COMPLETED") statusLabel = t("statusCompleted");
         if (row.status === "FAILED") statusLabel = t("statusFailed");
 
+        // Finished (completed, failed or stopped): the status only
+        if (!isActive) {
+          return <StatusBadge status={variant as any} label={statusLabel} />;
+        }
+
+        // Running: one badge that fills up with the percentage
         return (
-          <div className="flex items-center gap-3">
-            <StatusBadge status={variant as any} label={statusLabel} />
-            <div className="flex items-center gap-2 min-w-[90px]" title={`${progress} %`}>
-              <div className="w-14 h-1.5 bg-border rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${row.status === "FAILED" ? "bg-status-critical" : row.status === "COMPLETED" ? "bg-status-success" : "bg-status-warning"}`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className="text-xs font-medium tabular-nums text-text-muted">{progress} %</span>
-            </div>
-          </div>
+          <span
+            className="relative inline-flex items-center overflow-hidden px-2.5 py-0.5 rounded-full text-xs font-medium border border-status-medium/40 text-status-medium bg-status-medium/10 min-w-[120px]"
+            title={`${statusLabel} - ${progress} %`}
+          >
+            <span
+              className="absolute inset-y-0 left-0 bg-status-medium/30 transition-all duration-700"
+              style={{ width: `${progress}%` }}
+            />
+            <span className="relative w-full flex items-center justify-between gap-2">
+              <span>{statusLabel}</span>
+              <span className="tabular-nums font-semibold">{progress} %</span>
+            </span>
+          </span>
         );
       }
     },
