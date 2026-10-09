@@ -98,7 +98,9 @@ export default function ReportsPage() {
       
       let status = "PENDING";
       let summaryResult = "";
-      while (status === "PENDING" || status === "STARTED" || status === "processing") {
+      // RETRY: the AI task failed once and is retried by Celery; it used to end the wait and
+      // announce a successful (empty) summary
+      while (status === "PENDING" || status === "STARTED" || status === "RETRY" || status === "processing") {
         await new Promise(r => setTimeout(r, 5000));
         const taskRes = await fetchApi<any>(`/scans/tasks/${taskId}`);
         if (taskRes.status === "SUCCESS") {
@@ -111,6 +113,7 @@ export default function ReportsPage() {
         }
       }
       
+      if (!summaryResult || !String(summaryResult).trim()) throw new Error("Empty AI summary");
       setAiSummary(summaryResult);
       setIsAiApproved(true);
       toast.success("Summary generated successfully");
