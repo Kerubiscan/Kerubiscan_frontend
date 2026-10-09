@@ -50,6 +50,19 @@ function formatDuration(seconds?: number | null): string {
   return `${s} s`;
 }
 
+/** Running time shown like a clock: "04:07", "16:41", "1:02:05" */
+function formatClock(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mmss = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return h > 0 ? `${h}:${mmss}` : mmss;
+}
+
+// Percentage and estimate refresh while a scan runs; the clocks themselves tick every second
+const LIVE_REFRESH_MS = 3000;
+
 export default function ScansPage() {
   const t = useTranslations("Pages.scans");
   const { data: session } = useSession();
@@ -70,6 +83,9 @@ export default function ScansPage() {
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Elapsed time and remaining time tick locally between two refreshes of the list
+  const [now, setNow] = useState(() => Date.now());
+  const [fetchedAt, setFetchedAt] = useState(() => Date.now());
 
   const fetchCompanies = async () => {
     try {
@@ -89,6 +105,8 @@ export default function ScansPage() {
       }
       const data = await fetchApi<Scan[]>(url);
       setScans(data);
+      setFetchedAt(Date.now());
+      setNow(Date.now());
     } catch (err) {
       console.error("Failed to fetch scans:", err);
     } finally {
@@ -108,9 +126,15 @@ export default function ScansPage() {
   const hasActiveScan = scans.some((s) => s.status === "IN_PROGRESS" || s.status === "PENDING");
   useEffect(() => {
     if (!hasActiveScan) return;
-    const timer = setInterval(() => fetchScans(true), 10000);
+    const timer = setInterval(() => fetchScans(true), LIVE_REFRESH_MS);
     return () => clearInterval(timer);
   }, [hasActiveScan, selectedCompany, selectedZone]);
+
+  useEffect(() => {
+    if (!hasActiveScan) return;
+    const clock = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(clock);
+  }, [hasActiveScan]);
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this scan?")) {
@@ -284,15 +308,18 @@ export default function ScansPage() {
           );
         }
         if (row.status === "IN_PROGRESS" && row.duration_seconds !== null && row.duration_seconds !== undefined) {
+          // Seconds since the server computed these values: both clocks move every second
+          const drift = Math.max(0, Math.floor((now - fetchedAt) / 1000));
           // Estimate from real data only (previous runs, similar scans, real progress)
           let estimate = t("estimating");
           if (row.eta_seconds !== null && row.eta_seconds !== undefined) {
-            estimate = row.eta_seconds > 0 ? `≈ ${formatDuration(row.eta_seconds)} ${t("remaining")}` : t("endImminent");
+            const left = row.eta_seconds - drift;
+            estimate = left > 0 ? `≈ ${formatClock(left)} ${t("remaining")}` : t("endImminent");
           }
           return (
             <div className="flex flex-col">
-              <span className="text-xs text-text-muted">{formatDuration(row.duration_seconds)} {t("elapsed")}</span>
-              <span className="text-xs text-status-medium">{estimate}</span>
+              <span className="text-xs text-text-muted tabular-nums">{formatClock(row.duration_seconds + drift)} {t("elapsed")}</span>
+              <span className="text-xs text-status-medium tabular-nums">{estimate}</span>
             </div>
           );
         }
