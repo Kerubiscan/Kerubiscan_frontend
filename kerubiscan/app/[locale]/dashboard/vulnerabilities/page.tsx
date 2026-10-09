@@ -205,7 +205,7 @@ ${vuln.ai_analysis.remediation_steps ? vuln.ai_analysis.remediation_steps.join('
       // If it returns a background task id, poll for completion
       if (res.task_id) {
         let status = "PENDING";
-        while (status === "PENDING" || status === "STARTED" || status === "processing") {
+        while (status === "PENDING" || status === "STARTED" || status === "RETRY" || status === "processing") {
           await new Promise(r => setTimeout(r, 5000));
           const taskRes = await fetchApi<any>(`/scans/tasks/${res.task_id}`);
           if (taskRes.status === "SUCCESS") {
