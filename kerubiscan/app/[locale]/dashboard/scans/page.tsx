@@ -33,6 +33,8 @@ interface Scan {
   started_at?: string | null;
   finished_at?: string | null;
   duration_seconds?: number | null;
+  eta_seconds?: number | null;
+  eta_basis?: string | null;
 }
 
 const ACTIVE_STATUSES = ["PENDING", "IN_PROGRESS", "PAUSED"];
@@ -145,24 +147,14 @@ export default function ScansPage() {
     }
   };
 
+  // Reruns the scan on the same row (it used to create a new scan each time)
   const handleRerun = async (scan: Scan) => {
+    if (!confirm(t("rerunConfirm"))) return;
     try {
-      const company = companies.find(c => c.id === scan.company_id);
-      await fetchApi("/scans", {
-        method: "POST",
-        body: JSON.stringify({
-          company_name: company ? company.name : "Unknown",
-          scan_type: scan.scan_type,
-          target: scan.target,
-          network_zone: scan.network_zone,
-          scanner_engine: scan.scanner_engine,
-          scheduled_for: null,
-          recurrence_rule: null,
-        }),
-      });
+      await fetchApi(`/scans/${scan.id}/rerun`, { method: "POST" });
       fetchScans();
-    } catch (err) {
-      console.error("Failed to rerun scan", err);
+    } catch (err: any) {
+      alert(err.message || "Failed to rerun scan.");
     }
   };
 
@@ -231,8 +223,10 @@ export default function ScansPage() {
     {
       header: t("dateTimeCol"),
       accessor: (row: any) => {
-        if (!row.created_at) return "-";
-        return new Date(row.created_at).toLocaleString();
+        // Start of the last run (a rerun restarts the same row)
+        const launched = row.started_at || row.created_at;
+        if (!launched) return "-";
+        return new Date(launched).toLocaleString();
       }
     },
     {
@@ -290,7 +284,17 @@ export default function ScansPage() {
           );
         }
         if (row.status === "IN_PROGRESS" && row.duration_seconds !== null && row.duration_seconds !== undefined) {
-          return <span className="text-xs text-text-muted">{formatDuration(row.duration_seconds)} {t("elapsed")}</span>;
+          // Estimate from real data only (previous runs, similar scans, real progress)
+          let estimate = t("estimating");
+          if (row.eta_seconds !== null && row.eta_seconds !== undefined) {
+            estimate = row.eta_seconds > 0 ? `≈ ${formatDuration(row.eta_seconds)} ${t("remaining")}` : t("endImminent");
+          }
+          return (
+            <div className="flex flex-col">
+              <span className="text-xs text-text-muted">{formatDuration(row.duration_seconds)} {t("elapsed")}</span>
+              <span className="text-xs text-status-medium">{estimate}</span>
+            </div>
+          );
         }
         return "-";
       }
@@ -323,9 +327,11 @@ export default function ScansPage() {
               <button onClick={() => { setSelectedScan(row); setIsEditModalOpen(true); }} className="p-1 text-text-muted hover:text-white transition-colors" title={t("edit") || "Edit"}>
                 <Edit className="w-4 h-4" />
               </button>
-              <button onClick={() => handleRerun(row)} className="p-1 text-text-muted hover:text-primary transition-colors" title={t("rerun") || "Rerun"}>
-                <RotateCw className="w-4 h-4" />
-              </button>
+              {!ACTIVE_STATUSES.includes(row.status) ? (
+                <button onClick={() => handleRerun(row)} className="p-1 text-text-muted hover:text-primary transition-colors" title={t("rerun") || "Rerun"}>
+                  <RotateCw className="w-4 h-4" />
+                </button>
+              ) : null}
               <button onClick={() => handleDelete(row.id)} className="p-1 text-text-muted hover:text-status-critical transition-colors" title={t("delete") || "Delete"}>
                 <Trash2 className="w-4 h-4" />
               </button>
