@@ -212,7 +212,7 @@ export default function DashboardPage() {
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius="60%"
+                      innerRadius="45%"
                       outerRadius="90%"
                       stroke="none"
                       dataKey="value"
