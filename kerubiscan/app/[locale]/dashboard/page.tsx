@@ -22,6 +22,8 @@ export default function DashboardPage() {
   const [selectedDay, setSelectedDay] = useState<{ date: string; name: string } | null>(null);
   const [dayScans, setDayScans] = useState<any[]>([]);
   const [zoneFilter, setZoneFilter] = useState<string | null>(null);
+  // One scan of the selected day: the counters and the findings then show that scan only
+  const [selectedScan, setSelectedScan] = useState<{ id: string; name: string } | null>(null);
   const [isPeriodLoading, setIsPeriodLoading] = useState(false);
 
   // Data that does not depend on the selected day
@@ -45,8 +47,13 @@ export default function DashboardPage() {
 
   // Counters, distribution, findings and scans: of the selected day, or the current ones
   useEffect(() => {
+    // Answers of an older selection (quick clicks) are dropped: the last click wins
+    let stale = false;
     async function loadPeriodData() {
-      const query = selectedDay ? `?date=${selectedDay.date}` : "";
+      const params = new URLSearchParams();
+      if (selectedDay) params.set("date", selectedDay.date);
+      if (selectedScan) params.set("scan_id", selectedScan.id);
+      const query = params.toString() ? `?${params.toString()}` : "";
       try {
         setIsPeriodLoading(true);
         const [kpisData, pieChartData, recentVulnsData, scanData] = await Promise.all([
@@ -54,32 +61,42 @@ export default function DashboardPage() {
           fetchApi<any[]>(`/dashboard/charts/distribution${query}`),
           fetchApi<any[]>(`/dashboard/recent-vulnerabilities${query}`),
           selectedDay
-            ? fetchApi<any[]>(`/dashboard/scans-of-day?date=${selectedDay.date}`)
+            ? (selectedScan ? Promise.resolve(null) : fetchApi<any[]>(`/dashboard/scans-of-day?date=${selectedDay.date}`))
             : fetchApi<any>("/dashboard/latest-scan")
         ]);
+        if (stale) return;
         setKpis(kpisData);
         setPieData(pieChartData);
         setVulnerabilities(recentVulnsData);
         if (selectedDay) {
-          setDayScans(scanData || []);
+          if (!selectedScan) setDayScans(scanData || []);
         } else {
           setLatestScan(scanData);
         }
-        setZoneFilter(null);
       } catch (error) {
         console.error("Failed to load dashboard data", error);
       } finally {
-        setIsPeriodLoading(false);
-        setIsLoading(false);
+        if (!stale) {
+          setIsPeriodLoading(false);
+          setIsLoading(false);
+        }
       }
     }
     loadPeriodData();
-  }, [selectedDay]);
+    return () => {
+      stale = true;
+    };
+  }, [selectedDay, selectedScan]);
 
   // Click on the over-time chart: show that day (a second click on the same day goes back to today)
   const handleChartClick = (state: any) => {
-    const point = state?.activePayload?.[0]?.payload;
+    // Recharts 3 passes the index and the label of the clicked day (no "activePayload" any more)
+    const index = Number(state?.activeTooltipIndex ?? state?.activeIndex);
+    const point = (Number.isInteger(index) ? lineData[index] : undefined)
+      ?? lineData.find((p) => p.name === state?.activeLabel);
     if (!point?.date) return;
+    setSelectedScan(null);
+    setZoneFilter(null);
     setSelectedDay((current) => (current?.date === point.date ? null : { date: point.date, name: point.name }));
   };
 
@@ -107,10 +124,19 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 text-sm">
             <History className="w-4 h-4 text-primary" />
             <span className="font-medium">{t("history.viewing", { date: selectedDay.name })}</span>
+            {selectedScan && (
+              <>
+                <span className="text-text-muted">·</span>
+                <span className="font-medium truncate max-w-[260px]" title={selectedScan.name}>{t("history.scanSelected", { name: selectedScan.name })}</span>
+                <button onClick={() => setSelectedScan(null)} className="text-primary hover:underline text-xs">
+                  {t("history.allScansOfDay")}
+                </button>
+              </>
+            )}
             {isPeriodLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
           </div>
           <button
-            onClick={() => setSelectedDay(null)}
+            onClick={() => { setSelectedScan(null); setZoneFilter(null); setSelectedDay(null); }}
             className="text-sm text-primary hover:underline font-medium"
           >
             {t("history.backToNow")}
@@ -266,56 +292,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          {selectedDay ? (
-          <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
-            <h3 className="text-sm font-semibold mb-4 uppercase">{t("history.scansOf", { date: selectedDay.name })}</h3>
-            {zones.length > 1 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  onClick={() => setZoneFilter(null)}
-                  className={`px-2 py-0.5 rounded-full text-xs border ${!zoneFilter ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
-                >
-                  {t("history.allZones")}
-                </button>
-                {zones.map((zone) => (
-                  <button
-                    key={zone}
-                    onClick={() => setZoneFilter(zone)}
-                    className={`px-2 py-0.5 rounded-full text-xs border ${zoneFilter === zone ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
-                  >
-                    {zone}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="space-y-3 overflow-y-auto max-h-[280px] pr-1 mb-4">
-              {visibleDayScans.length === 0 && (
-                <p className="text-sm text-text-muted">{t("history.noScans")}</p>
-              )}
-              {visibleDayScans.map((scan) => (
-                <div key={scan.id} className="border border-border/60 rounded-lg p-3 text-sm">
-                  <div className="flex justify-between gap-2">
-                    <span className="font-medium truncate" title={scan.name}>{scan.name}</span>
-                    <span className="text-text-muted tabular-nums shrink-0">{scan.time}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-text-muted mt-1">
-                    <MapPin className="w-3 h-3" />
-                    <span className="truncate">{scan.zone || t("history.noZone")}</span>
-                    <span>·</span>
-                    <span>{scan.engine}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-xs">
-                    <span className="px-2 py-0.5 bg-status-info/20 text-status-info rounded-md font-medium border border-status-info/30">{scan.status}</span>
-                    <span className="text-text-muted">{t("history.vulnerabilitiesCount", { count: scan.vulnerabilities })}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link href="/dashboard/reports" className="w-full py-2 bg-transparent border border-primary/30 text-primary hover:bg-primary/10 rounded-lg text-sm transition-colors font-medium mt-auto text-center block">
-              {t("latestScan.viewReport")}
-            </Link>
-          </div>
-          ) : (
           <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col justify-center">
             <h3 className="text-sm font-semibold mb-6 uppercase">{t("latestScan.title")}</h3>
             <div className="space-y-4 text-sm mb-6">
@@ -350,10 +326,6 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">{t("latestScan.zone")}</span>
-                <span className="font-medium text-right truncate max-w-[180px]" title={latestScan?.zone || ""}>{latestScan?.zone || "-"}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-text-muted">{t("latestScan.date")}</span>
                 <span className="font-medium text-right">{latestScan?.date}</span>
               </div>
@@ -365,12 +337,15 @@ export default function DashboardPage() {
                 <span className="text-text-muted">{t("latestScan.vulnerabilities")}</span>
                 <span className="font-medium text-right">{latestScan?.vulnerabilities}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">{t("latestScan.zone")}</span>
+                <span className="font-medium text-right truncate max-w-[180px]" title={latestScan?.zone || ""}>{latestScan?.zone || "-"}</span>
+              </div>
             </div>
             <Link href="/dashboard/reports" className="w-full py-2 bg-transparent border border-primary/30 text-primary hover:bg-primary/10 rounded-lg text-sm transition-colors font-medium mt-auto text-center block">
               {t("latestScan.viewReport")}
             </Link>
           </div>
-          )}
 
           <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
             <h3 className="text-sm font-semibold mb-6 uppercase shrink-0">{t("assets.title")}</h3>
@@ -393,11 +368,70 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Scans of the day picked on the chart (the "Dernier scan" card above never changes) */}
+      {selectedDay && (
+            <div className="bg-surface border border-border rounded-xl p-5 flex flex-col">
+              <h3 className="text-sm font-semibold mb-1 uppercase">{t("history.scansOf", { date: selectedDay.name })}</h3>
+              <p className="text-[11px] text-text-muted mb-4">{t("history.pickScan")}</p>
+              {zones.length > 1 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <button
+                    onClick={() => setZoneFilter(null)}
+                    className={`px-2 py-0.5 rounded-full text-xs border ${!zoneFilter ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
+                  >
+                    {t("history.allZones")}
+                  </button>
+                  {zones.map((zone) => (
+                    <button
+                      key={zone}
+                      onClick={() => setZoneFilter(zone)}
+                      className={`px-2 py-0.5 rounded-full text-xs border ${zoneFilter === zone ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
+                    >
+                      {zone}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 max-h-[320px] overflow-y-auto pr-1 mb-4">
+                {visibleDayScans.length === 0 && (
+                  <p className="text-sm text-text-muted">{t("history.noScans")}</p>
+                )}
+                {visibleDayScans.map((scan) => (
+                  <button
+                    key={scan.id}
+                    onClick={() => setSelectedScan((current) => (current?.id === scan.id ? null : { id: scan.id, name: scan.name }))}
+                    className={`w-full text-left border rounded-lg p-3 text-sm transition-colors ${selectedScan?.id === scan.id ? "border-primary bg-primary/10" : "border-border/60 hover:border-primary/50"}`}
+                  >
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium truncate" title={scan.name}>{scan.name}</span>
+                      <span className="text-text-muted tabular-nums shrink-0">{scan.time}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-text-muted mt-1">
+                      <MapPin className="w-3 h-3" />
+                      <span className="truncate">{scan.zone || t("history.noZone")}</span>
+                      <span>·</span>
+                      <span>{scan.engine}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 text-xs">
+                      <span className="px-2 py-0.5 bg-status-info/20 text-status-info rounded-md font-medium border border-status-info/30">{scan.status}</span>
+                      <span className="text-text-muted">{t("history.vulnerabilitiesCount", { count: scan.vulnerabilities })}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <Link href="/dashboard/reports" className="w-full py-2 bg-transparent border border-primary/30 text-primary hover:bg-primary/10 rounded-lg text-sm transition-colors font-medium mt-auto text-center block">
+                {t("latestScan.viewReport")}
+              </Link>
+            </div>
+      )}
+
       {/* Bottom Row: Table + Scheduled Scans */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-5 flex flex-col">
           <h3 className="text-sm font-semibold mb-6 uppercase">
-            {selectedDay ? t("history.findingsOf", { date: selectedDay.name }) : t("vulnerabilities.title")}
+            {selectedScan
+              ? t("history.scanFindings", { name: selectedScan.name })
+              : selectedDay ? t("history.findingsOf", { date: selectedDay.name }) : t("vulnerabilities.title")}
           </h3>
 
           <div className="flex-1 overflow-x-auto">
