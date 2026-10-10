@@ -8,7 +8,7 @@ import { Link, usePathname } from "@/i18n/routing";
 import { fetchApi } from "@/lib/api";
 import { signOut } from "next-auth/react";
 
-export function Topbar() {
+export function Topbar({ onMenuClick, menuOpen = false }: { onMenuClick?: () => void; menuOpen?: boolean }) {
   const t = useTranslations("Topbar");
   const tNav = useTranslations("Navigation");
   const pathname = usePathname();
@@ -79,7 +79,12 @@ export function Topbar() {
   return (
     <div className="h-20 bg-base border-b border-border flex items-center justify-between px-8 shrink-0">
       <div className="flex items-center gap-4">
-        <button className="text-text-muted hover:text-white transition-colors">
+        <button
+          className="text-text-muted hover:text-white transition-colors"
+          onClick={onMenuClick}
+          aria-expanded={menuOpen}
+          aria-label="Menu"
+        >
           <Menu className="w-6 h-6" />
         </button>
         <h1 className="text-xl font-semibold">{pageTitle}</h1>

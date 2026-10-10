@@ -344,7 +344,8 @@
       "status": "Statut",
       "statusVal": "Terminé",
       "vulnerabilities": "Vulnérabilités",
-      "viewReport": "Voir le rapport"
+      "viewReport": "Voir le rapport",
+      "zone": "Zone"
     },
     "assets": {
       "title": "ACTIFS PAR OS",
@@ -376,6 +377,17 @@
       "scanServersTime": "Tous les dimanches à 01:00",
       "scanEndpoints": "Scan Postes",
       "scanEndpointsTime": "Tous les samedis à 03:00"
+    },
+    "history": {
+      "viewing": "Vue du {date}",
+      "backToNow": "Revenir à la vue actuelle",
+      "hint": "Cliquez sur un jour pour remonter dans le temps",
+      "scansOf": "Scans du {date}",
+      "noScans": "Aucun scan ce jour-là.",
+      "allZones": "Toutes les zones",
+      "noZone": "Sans zone",
+      "findingsOf": "Vulnérabilités détectées le {date}",
+      "vulnerabilitiesCount": "{count} vulnérabilité(s)"
     }
   },
   "Gateway": {

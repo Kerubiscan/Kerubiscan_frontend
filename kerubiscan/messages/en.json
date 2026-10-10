@@ -344,7 +344,8 @@
       "status": "Status",
       "statusVal": "Completed",
       "vulnerabilities": "Vulnerabilities",
-      "viewReport": "View report"
+      "viewReport": "View report",
+      "zone": "Zone"
     },
     "assets": {
       "title": "Assets By OS",
@@ -376,6 +377,17 @@
       "scanServersTime": "Every Sunday at 01:00",
       "scanEndpoints": "Endpoints Scan",
       "scanEndpointsTime": "Every Saturday at 03:00"
+    },
+    "history": {
+      "viewing": "View of {date}",
+      "backToNow": "Back to the current view",
+      "hint": "Click a day to go back in time",
+      "scansOf": "Scans of {date}",
+      "noScans": "No scan that day.",
+      "allZones": "All zones",
+      "noZone": "No zone",
+      "findingsOf": "Vulnerabilities detected on {date}",
+      "vulnerabilitiesCount": "{count} vulnerability(ies)"
     }
   },
   "Gateway": {
