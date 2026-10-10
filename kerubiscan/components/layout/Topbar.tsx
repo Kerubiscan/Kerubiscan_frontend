@@ -7,6 +7,7 @@ import { LanguageSwitcher } from "../LanguageSwitcher";
 import { Link, usePathname } from "@/i18n/routing";
 import { fetchApi } from "@/lib/api";
 import { signOut } from "next-auth/react";
+import { Logo } from "../Logo";
 
 export function Topbar({ onMenuClick, menuOpen = false }: { onMenuClick?: () => void; menuOpen?: boolean }) {
   const t = useTranslations("Topbar");
@@ -79,14 +80,22 @@ export function Topbar({ onMenuClick, menuOpen = false }: { onMenuClick?: () => 
   return (
     <div className="h-20 bg-base border-b border-border flex items-center justify-between px-8 shrink-0">
       <div className="flex items-center gap-4">
-        <button
-          className="text-text-muted hover:text-white transition-colors"
-          onClick={onMenuClick}
-          aria-expanded={menuOpen}
-          aria-label="Menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+        {/* Sidebar folded: the menu button and the logo stay here, top left. Unfolded, they are
+            at the top of the sidebar (with the logo), which then pushes the page to the right. */}
+        {!menuOpen && (
+          <>
+            <button
+              className="text-text-muted hover:text-white transition-colors"
+              onClick={onMenuClick}
+              aria-expanded={false}
+              aria-label="Menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <Logo className="scale-90 origin-left hidden sm:flex" />
+            <span className="hidden sm:block h-8 w-px bg-border" aria-hidden="true" />
+          </>
+        )}
         <h1 className="text-xl font-semibold">{pageTitle}</h1>
       </div>
       
