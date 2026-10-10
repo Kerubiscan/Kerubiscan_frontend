@@ -177,11 +177,21 @@ export default function AssetsPage() {
 
   const handleScanAssets = async (assetIp?: string) => {
     try {
-      const ipsToScan = assetIp 
-        ? [assetIp] 
-        : assetsData.filter(a => selectedAssetIds.has(String(a.id))).map(a => a.ip_address);
-        
+      const selected = assetIp
+        ? assetsData.filter(a => a.ip_address === assetIp)
+        : assetsData.filter(a => selectedAssetIds.has(String(a.id)));
+      const ipsToScan = assetIp ? [assetIp] : selected.map(a => a.ip_address);
+
       if (ipsToScan.length === 0) return;
+
+      // The scan belongs to the assets' company and zone (it was always "KVS" / "Internal": the
+      // findings went to another company and the report was titled "Internal")
+      const companyIds = Array.from(new Set(selected.map(a => a.company_id).filter(Boolean)));
+      const zones = Array.from(new Set(selected.map(a => a.network_zone).filter(Boolean)));
+      if (companyIds.length > 1) {
+        alert(t("scanOneCompany"));
+        return;
+      }
 
       if (!confirm(`Queue Vulnerability Scan for ${ipsToScan.length} asset(s)?`)) return;
 
@@ -190,9 +200,9 @@ export default function AssetsPage() {
       await fetchApi("/scans", {
         method: "POST",
         body: JSON.stringify({
-          company_name: "KVS",
+          ...(companyIds.length === 1 ? { company_id: String(companyIds[0]) } : { company_name: "KVS" }),
           target: targetString,
-          network_zone: "Internal",
+          network_zone: zones.length === 1 ? zones[0] : "Internal",
           scan_type: "VULNERABILITY",
           scanner_engine: vulnEngine
         })

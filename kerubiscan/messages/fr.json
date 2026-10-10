@@ -94,6 +94,7 @@
       "statusFailed": "ÉCHOUÉ"
     },
     "assets": {
+      "scanOneCompany": "Sélectionnez des actifs d'une seule entreprise : le scan et son rapport appartiennent à une entreprise.",
       "title": "Actifs",
       "description": "Inventaire de votre infrastructure informatique.",
       "addAssetButton": "Ajouter un actif",
