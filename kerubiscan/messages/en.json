@@ -387,7 +387,11 @@
       "allZones": "All zones",
       "noZone": "No zone",
       "findingsOf": "Vulnerabilities detected on {date}",
-      "vulnerabilitiesCount": "{count} vulnerability(ies)"
+      "vulnerabilitiesCount": "{count} vulnerability(ies)",
+      "scanFindings": "Vulnerabilities of the scan “{name}”",
+      "scanSelected": "Scan: {name}",
+      "allScansOfDay": "All scans of the day",
+      "pickScan": "Click a scan to see its vulnerabilities"
     }
   },
   "Gateway": {
