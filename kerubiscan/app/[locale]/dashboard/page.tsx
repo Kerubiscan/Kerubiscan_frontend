@@ -292,61 +292,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          {selectedDay ? (
-          <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
-            <h3 className="text-sm font-semibold mb-1 uppercase">{t("history.scansOf", { date: selectedDay.name })}</h3>
-            <p className="text-[11px] text-text-muted mb-4">{t("history.pickScan")}</p>
-            {zones.length > 1 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  onClick={() => setZoneFilter(null)}
-                  className={`px-2 py-0.5 rounded-full text-xs border ${!zoneFilter ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
-                >
-                  {t("history.allZones")}
-                </button>
-                {zones.map((zone) => (
-                  <button
-                    key={zone}
-                    onClick={() => setZoneFilter(zone)}
-                    className={`px-2 py-0.5 rounded-full text-xs border ${zoneFilter === zone ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
-                  >
-                    {zone}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="space-y-3 overflow-y-auto max-h-[280px] pr-1 mb-4">
-              {visibleDayScans.length === 0 && (
-                <p className="text-sm text-text-muted">{t("history.noScans")}</p>
-              )}
-              {visibleDayScans.map((scan) => (
-                <button
-                  key={scan.id}
-                  onClick={() => setSelectedScan((current) => (current?.id === scan.id ? null : { id: scan.id, name: scan.name }))}
-                  className={`w-full text-left border rounded-lg p-3 text-sm transition-colors ${selectedScan?.id === scan.id ? "border-primary bg-primary/10" : "border-border/60 hover:border-primary/50"}`}
-                >
-                  <div className="flex justify-between gap-2">
-                    <span className="font-medium truncate" title={scan.name}>{scan.name}</span>
-                    <span className="text-text-muted tabular-nums shrink-0">{scan.time}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-text-muted mt-1">
-                    <MapPin className="w-3 h-3" />
-                    <span className="truncate">{scan.zone || t("history.noZone")}</span>
-                    <span>·</span>
-                    <span>{scan.engine}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-xs">
-                    <span className="px-2 py-0.5 bg-status-info/20 text-status-info rounded-md font-medium border border-status-info/30">{scan.status}</span>
-                    <span className="text-text-muted">{t("history.vulnerabilitiesCount", { count: scan.vulnerabilities })}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <Link href="/dashboard/reports" className="w-full py-2 bg-transparent border border-primary/30 text-primary hover:bg-primary/10 rounded-lg text-sm transition-colors font-medium mt-auto text-center block">
-              {t("latestScan.viewReport")}
-            </Link>
-          </div>
-          ) : (
           <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col justify-center">
             <h3 className="text-sm font-semibold mb-6 uppercase">{t("latestScan.title")}</h3>
             <div className="space-y-4 text-sm mb-6">
@@ -401,7 +346,6 @@ export default function DashboardPage() {
               {t("latestScan.viewReport")}
             </Link>
           </div>
-          )}
 
           <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
             <h3 className="text-sm font-semibold mb-6 uppercase shrink-0">{t("assets.title")}</h3>
@@ -423,6 +367,63 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Scans of the day picked on the chart (the "Dernier scan" card above never changes) */}
+      {selectedDay && (
+            <div className="bg-surface border border-border rounded-xl p-5 flex flex-col">
+              <h3 className="text-sm font-semibold mb-1 uppercase">{t("history.scansOf", { date: selectedDay.name })}</h3>
+              <p className="text-[11px] text-text-muted mb-4">{t("history.pickScan")}</p>
+              {zones.length > 1 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <button
+                    onClick={() => setZoneFilter(null)}
+                    className={`px-2 py-0.5 rounded-full text-xs border ${!zoneFilter ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
+                  >
+                    {t("history.allZones")}
+                  </button>
+                  {zones.map((zone) => (
+                    <button
+                      key={zone}
+                      onClick={() => setZoneFilter(zone)}
+                      className={`px-2 py-0.5 rounded-full text-xs border ${zoneFilter === zone ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
+                    >
+                      {zone}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 max-h-[320px] overflow-y-auto pr-1 mb-4">
+                {visibleDayScans.length === 0 && (
+                  <p className="text-sm text-text-muted">{t("history.noScans")}</p>
+                )}
+                {visibleDayScans.map((scan) => (
+                  <button
+                    key={scan.id}
+                    onClick={() => setSelectedScan((current) => (current?.id === scan.id ? null : { id: scan.id, name: scan.name }))}
+                    className={`w-full text-left border rounded-lg p-3 text-sm transition-colors ${selectedScan?.id === scan.id ? "border-primary bg-primary/10" : "border-border/60 hover:border-primary/50"}`}
+                  >
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium truncate" title={scan.name}>{scan.name}</span>
+                      <span className="text-text-muted tabular-nums shrink-0">{scan.time}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-text-muted mt-1">
+                      <MapPin className="w-3 h-3" />
+                      <span className="truncate">{scan.zone || t("history.noZone")}</span>
+                      <span>·</span>
+                      <span>{scan.engine}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 text-xs">
+                      <span className="px-2 py-0.5 bg-status-info/20 text-status-info rounded-md font-medium border border-status-info/30">{scan.status}</span>
+                      <span className="text-text-muted">{t("history.vulnerabilitiesCount", { count: scan.vulnerabilities })}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <Link href="/dashboard/reports" className="w-full py-2 bg-transparent border border-primary/30 text-primary hover:bg-primary/10 rounded-lg text-sm transition-colors font-medium mt-auto text-center block">
+                {t("latestScan.viewReport")}
+              </Link>
+            </div>
+      )}
 
       {/* Bottom Row: Table + Scheduled Scans */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
