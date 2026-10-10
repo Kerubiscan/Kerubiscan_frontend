@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
@@ -62,6 +62,11 @@ function formatClock(seconds: number): string {
 
 // Percentage and estimate refresh while a scan runs; the clocks themselves tick every second
 const LIVE_REFRESH_MS = 3000;
+// The clocks are redrawn twice a second so that no second is skipped or shown twice
+const CLOCK_TICK_MS = 500;
+// A running scan's start and estimated end are kept fixed on the browser's clock; they move only
+// when the server's figures differ by more than this (estimate revised, clocks out of step)
+const ANCHOR_TOLERANCE_MS = 3000;
 
 export default function ScansPage() {
   const t = useTranslations("Pages.scans");
@@ -85,7 +90,10 @@ export default function ScansPage() {
   const [loading, setLoading] = useState(true);
   // Elapsed time and remaining time tick locally between two refreshes of the list
   const [now, setNow] = useState(() => Date.now());
-  const [fetchedAt, setFetchedAt] = useState(() => Date.now());
+  // Start and estimated end of each running scan, on the browser's clock. Re-anchoring the elapsed
+  // time on every refresh made it go back or repeat a second: the server's figure is computed
+  // before the response travels and is rounded down to the second.
+  const anchors = useRef<Record<string, { start: number; end: number | null }>>({});
 
   const fetchCompanies = async () => {
     try {
@@ -104,9 +112,22 @@ export default function ScansPage() {
         url += url.includes('?') ? `&network_zone=${selectedZone}` : `?network_zone=${selectedZone}`;
       }
       const data = await fetchApi<Scan[]>(url);
+      const received = Date.now();
+      const next: Record<string, { start: number; end: number | null }> = {};
+      for (const s of data) {
+        if (s.status !== "IN_PROGRESS" || s.duration_seconds === null || s.duration_seconds === undefined) continue;
+        const previous = anchors.current[s.id];
+        const start = received - s.duration_seconds * 1000;
+        const end = s.eta_seconds === null || s.eta_seconds === undefined ? null : received + s.eta_seconds * 1000;
+        next[s.id] = {
+          start: previous && Math.abs(previous.start - start) <= ANCHOR_TOLERANCE_MS ? previous.start : start,
+          end: end === null ? null
+            : previous && previous.end !== null && Math.abs(previous.end - end) <= ANCHOR_TOLERANCE_MS ? previous.end : end,
+        };
+      }
+      anchors.current = next;
       setScans(data);
-      setFetchedAt(Date.now());
-      setNow(Date.now());
+      setNow(received);
     } catch (err) {
       console.error("Failed to fetch scans:", err);
     } finally {
@@ -132,7 +153,7 @@ export default function ScansPage() {
 
   useEffect(() => {
     if (!hasActiveScan) return;
-    const clock = setInterval(() => setNow(Date.now()), 1000);
+    const clock = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(clock);
   }, [hasActiveScan]);
 
@@ -308,17 +329,18 @@ export default function ScansPage() {
           );
         }
         if (row.status === "IN_PROGRESS" && row.duration_seconds !== null && row.duration_seconds !== undefined) {
-          // Seconds since the server computed these values: both clocks move every second
-          const drift = Math.max(0, Math.floor((now - fetchedAt) / 1000));
+          // Both clocks run from the anchors: one second after the other, like a watch
+          const anchor = anchors.current[row.id];
+          const elapsed = anchor ? (now - anchor.start) / 1000 : row.duration_seconds;
           // Estimate from real data only (previous runs, similar scans, real progress)
           let estimate = t("estimating");
           if (row.eta_seconds !== null && row.eta_seconds !== undefined) {
-            const left = row.eta_seconds - drift;
+            const left = anchor && anchor.end !== null ? (anchor.end - now) / 1000 : row.eta_seconds;
             estimate = left > 0 ? `≈ ${formatClock(left)} ${t("remaining")}` : t("endImminent");
           }
           return (
             <div className="flex flex-col">
-              <span className="text-xs text-text-muted tabular-nums">{formatClock(row.duration_seconds + drift)} {t("elapsed")}</span>
+              <span className="text-xs text-text-muted tabular-nums">{formatClock(elapsed)} {t("elapsed")}</span>
               <span className="text-xs text-status-medium tabular-nums">{estimate}</span>
             </div>
           );
