@@ -212,14 +212,15 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-main">Target</label>
-            <input 
-              type="text" 
-              className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              placeholder={scanType === "DISCOVERY" ? "10.0.0.0/24" : scanType === "WEB_APP" ? "example.com or https://example.com/app" : "192.168.1.10, 10.0.0.0/24, example.com"}
+            <textarea
+              rows={4}
+              className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-mono"
+              placeholder={scanType === "DISCOVERY" ? "10.0.0.0/24" : scanType === "WEB_APP" ? "app1.exemple.com\napp2.exemple.com\napp3.exemple.com" : "192.168.1.10\n10.0.0.0/24\nexample.com"}
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               required
             />
+            <p className="text-xs text-text-muted">Une cible par ligne (ou séparées par une virgule).</p>
           </div>
 
           <div className="space-y-2">

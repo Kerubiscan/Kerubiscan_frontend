@@ -109,13 +109,14 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-main">Target</label>
-            <input 
-              type="text" 
-              className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            <textarea
+              rows={4}
+              className="w-full px-3 py-2 bg-base border border-border rounded-lg text-sm text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-mono"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               required
             />
+            <p className="text-xs text-text-muted">Une cible par ligne (ou séparées par une virgule).</p>
           </div>
 
           <div className="space-y-2">
