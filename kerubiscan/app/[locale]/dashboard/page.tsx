@@ -2,10 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { XCircle, AlertTriangle, Shield, Info, Calendar, Loader2, Layers, History, MapPin } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine, Brush } from "recharts";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { fetchApi } from "@/lib/api";
+
+// Days loaded for the over-time chart, and days shown at once (the slider moves the window)
+const HISTORY_DAYS = 60;
+const VISIBLE_DAYS = 14;
 
 export default function DashboardPage() {
   const t = useTranslations("Dashboard");
@@ -25,17 +29,24 @@ export default function DashboardPage() {
   // One scan of the selected day: the counters and the findings then show that scan only
   const [selectedScan, setSelectedScan] = useState<{ id: string; name: string } | null>(null);
   const [isPeriodLoading, setIsPeriodLoading] = useState(false);
+  // Window of days shown on the over-time chart: the slider under it moves it over 60 days
+  const [chartWindow, setChartWindow] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   // Data that does not depend on the selected day
   useEffect(() => {
     async function loadStaticData() {
       try {
         const [lineChartData, osChartData, scheduledScansData] = await Promise.all([
-          fetchApi<any[]>("/dashboard/charts/over-time"),
+          fetchApi<any[]>(`/dashboard/charts/over-time?days=${HISTORY_DAYS}`),
           fetchApi<any[]>("/dashboard/assets-os"),
           fetchApi<any[]>("/dashboard/scheduled-scans")
         ]);
         setLineData(lineChartData);
+        // Last two weeks first; older days are reached by sliding the window
+        setChartWindow({
+          startIndex: Math.max(0, lineChartData.length - VISIBLE_DAYS),
+          endIndex: Math.max(0, lineChartData.length - 1),
+        });
         setOsData(osChartData);
         setScheduledScans(scheduledScansData);
       } catch (error) {
@@ -90,10 +101,11 @@ export default function DashboardPage() {
 
   // Click on the over-time chart: show that day (a second click on the same day goes back to today)
   const handleChartClick = (state: any) => {
-    // Recharts 3 passes the index and the label of the clicked day (no "activePayload" any more)
+    // Recharts 3 passes the label and the index of the clicked day (no "activePayload" any more).
+    // The label first: with the slider, the index may count from the start of the visible window.
     const index = Number(state?.activeTooltipIndex ?? state?.activeIndex);
-    const point = (Number.isInteger(index) ? lineData[index] : undefined)
-      ?? lineData.find((p) => p.name === state?.activeLabel);
+    const point = lineData.find((p) => p.name === state?.activeLabel)
+      ?? (Number.isInteger(index) ? lineData[index] : undefined);
     if (!point?.date) return;
     setSelectedScan(null);
     setZoneFilter(null);
@@ -245,12 +257,19 @@ export default function DashboardPage() {
               <div className="flex items-center gap-1.5"><div className="w-2 h-1 bg-status-low"></div><span className="text-text-muted">{formatLabel(t("stats.low"))}</span></div>
               <div className="flex items-center gap-1.5"><div className="w-2 h-1 bg-status-info"></div><span className="text-text-muted">{formatLabel(t("stats.info"))}</span></div>
             </div>
-            <div className="flex-1 w-full min-h-[200px]">
+            <div className="flex-1 w-full min-h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={lineData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }} onClick={handleChartClick} style={{ cursor: "pointer" }}>
+                <LineChart
+                  data={lineData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  onClick={handleChartClick}
+                  style={{ cursor: "pointer", outline: "none" }}
+                  accessibilityLayer={false}
+                >
                   {selectedDay && <ReferenceLine x={selectedDay.name} stroke="var(--primary)" strokeDasharray="4 4" />}
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                  {/* Padding: the first and last days are no longer cut by the chart's edges */}
+                  <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} dy={10} padding={{ left: 24, right: 24 }} />
                   <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-main)' }}
@@ -260,6 +279,22 @@ export default function DashboardPage() {
                   <Line type="monotone" dataKey="Medium" stroke="var(--status-medium)" strokeWidth={2} dot={{ r: 2, fill: 'var(--status-medium)', strokeWidth: 0 }} />
                   <Line type="monotone" dataKey="Low" stroke="var(--status-low)" strokeWidth={2} dot={{ r: 2, fill: 'var(--status-low)', strokeWidth: 0 }} />
                   <Line type="monotone" dataKey="Info" stroke="var(--status-info)" strokeWidth={2} dot={{ r: 2, fill: 'var(--status-info)', strokeWidth: 0 }} />
+                  {chartWindow && (
+                    <Brush
+                      dataKey="name"
+                      height={22}
+                      travellerWidth={10}
+                      stroke="var(--primary)"
+                      fill="var(--bg-base)"
+                      startIndex={chartWindow.startIndex}
+                      endIndex={chartWindow.endIndex}
+                      onChange={(range: any) => {
+                        if (Number.isInteger(range?.startIndex) && Number.isInteger(range?.endIndex)) {
+                          setChartWindow({ startIndex: range.startIndex, endIndex: range.endIndex });
+                        }
+                      }}
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
