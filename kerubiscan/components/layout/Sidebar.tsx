@@ -14,7 +14,8 @@ import {
   Users, 
   Settings, 
   Activity,
-  Key
+  Key,
+  Menu
 } from "lucide-react";
 import { Link, usePathname } from "@/i18n/routing";
 import { useSession } from "next-auth/react";
@@ -22,7 +23,7 @@ import { canViewAuditsAndUsers } from "@/lib/roles";
 
 import { fetchApi } from "@/lib/api";
 
-export function Sidebar() {
+export function Sidebar({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations("Navigation");
   const tScanner = useTranslations("Scanner");
   const pathname = usePathname();
@@ -77,7 +78,16 @@ export function Sidebar() {
 
   return (
     <div className="w-64 h-full bg-base border-r border-border flex flex-col shrink-0">
-      <div className="h-20 px-6 flex items-center border-b border-border/50 shrink-0">
+      {/* The menu button sits with the logo: it folds the sidebar back to the left */}
+      <div className="h-20 px-4 flex items-center gap-3 border-b border-border/50 shrink-0">
+        <button
+          className="text-text-muted hover:text-white transition-colors shrink-0"
+          onClick={onMenuClick}
+          aria-expanded={true}
+          aria-label="Menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
         <Logo className="scale-90 origin-left" />
       </div>
       

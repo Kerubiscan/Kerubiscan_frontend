@@ -73,7 +73,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         aria-hidden={!sidebarOpen}
         inert={!sidebarOpen}
       >
-        <Sidebar />
+        <Sidebar onMenuClick={toggleSidebar} />
       </div>
       {sidebarOpen && !isDesktop && (
         <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
