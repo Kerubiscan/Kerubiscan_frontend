@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { XCircle, AlertTriangle, Shield, Info, Calendar, Loader2, Layers, History, MapPin } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine, Brush } from "recharts";
 import { useTranslations } from "next-intl";
@@ -10,6 +10,8 @@ import { fetchApi } from "@/lib/api";
 // Days loaded for the over-time chart, and days shown at once (the slider moves the window)
 const HISTORY_DAYS = 60;
 const VISIBLE_DAYS = 14;
+// While a scan runs, the dashboard refreshes this often (assets by OS, counters, latest scan)
+const LIVE_REFRESH_MS = 8000;
 
 export default function DashboardPage() {
   const t = useTranslations("Dashboard");
@@ -33,24 +35,38 @@ export default function DashboardPage() {
   const [chartWindow, setChartWindow] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   // Data that does not depend on the selected day
+  // Keeps the window on the latest days only on the very first load, not on live refreshes
+  const chartWindowSet = useRef(false);
+
+  const refreshLiveData = async (withChart: boolean) => {
+    try {
+      const [osChartData, lineChartData] = await Promise.all([
+        fetchApi<any[]>("/dashboard/assets-os"),
+        withChart ? fetchApi<any[]>(`/dashboard/charts/over-time?days=${HISTORY_DAYS}`) : Promise.resolve(null),
+      ]);
+      setOsData(osChartData);
+      if (lineChartData) {
+        setLineData(lineChartData);
+        if (!chartWindowSet.current) {
+          setChartWindow({
+            startIndex: Math.max(0, lineChartData.length - VISIBLE_DAYS),
+            endIndex: Math.max(0, lineChartData.length - 1),
+          });
+          chartWindowSet.current = true;
+        }
+      }
+    } catch (error) {
+      console.error("Failed to refresh dashboard data", error);
+    }
+  };
+
   useEffect(() => {
     async function loadStaticData() {
+      await refreshLiveData(true);
       try {
-        const [lineChartData, osChartData, scheduledScansData] = await Promise.all([
-          fetchApi<any[]>(`/dashboard/charts/over-time?days=${HISTORY_DAYS}`),
-          fetchApi<any[]>("/dashboard/assets-os"),
-          fetchApi<any[]>("/dashboard/scheduled-scans")
-        ]);
-        setLineData(lineChartData);
-        // Last two weeks first; older days are reached by sliding the window
-        setChartWindow({
-          startIndex: Math.max(0, lineChartData.length - VISIBLE_DAYS),
-          endIndex: Math.max(0, lineChartData.length - 1),
-        });
-        setOsData(osChartData);
-        setScheduledScans(scheduledScansData);
+        setScheduledScans(await fetchApi<any[]>("/dashboard/scheduled-scans"));
       } catch (error) {
-        console.error("Failed to load dashboard data", error);
+        console.error("Failed to load scheduled scans", error);
       }
     }
     loadStaticData();
@@ -98,6 +114,49 @@ export default function DashboardPage() {
       stale = true;
     };
   }, [selectedDay, selectedScan]);
+
+  // While a scan is running, keep "Assets by OS", the counters and the latest scan up to date;
+  // one last refresh when the scan finishes (unless the user is viewing a past day).
+  const wasScanning = useRef(false);
+  useEffect(() => {
+    let stopped = false;
+    const tick = async () => {
+      let running = 0;
+      try {
+        const status = await fetchApi<any>("/scans/status");
+        running = Number(status?.scans_in_progress) || 0;
+      } catch {
+        running = 0;
+      }
+      if (stopped) return;
+      if (running > 0 || wasScanning.current) {
+        await refreshLiveData(true);
+        if (!selectedDay) {
+          try {
+            const [kpisData, pieChartData, recentVulnsData, latestScanData] = await Promise.all([
+              fetchApi<any>("/dashboard/kpis"),
+              fetchApi<any[]>("/dashboard/charts/distribution"),
+              fetchApi<any[]>("/dashboard/recent-vulnerabilities"),
+              fetchApi<any>("/dashboard/latest-scan"),
+            ]);
+            if (stopped) return;
+            setKpis(kpisData);
+            setPieData(pieChartData);
+            setVulnerabilities(recentVulnsData);
+            setLatestScan(latestScanData);
+          } catch (error) {
+            console.error("Failed to refresh dashboard data", error);
+          }
+        }
+      }
+      wasScanning.current = running > 0;
+    };
+    const timer = setInterval(tick, LIVE_REFRESH_MS);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [selectedDay]);
 
   // Click on the over-time chart: show that day (a second click on the same day goes back to today)
   const handleChartClick = (state: any) => {
