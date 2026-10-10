@@ -119,31 +119,6 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6 pb-6">
 
-      {selectedDay && (
-        <div className="flex items-center justify-between gap-4 bg-primary/10 border border-primary/30 rounded-xl px-5 py-3">
-          <div className="flex items-center gap-3 text-sm">
-            <History className="w-4 h-4 text-primary" />
-            <span className="font-medium">{t("history.viewing", { date: selectedDay.name })}</span>
-            {selectedScan && (
-              <>
-                <span className="text-text-muted">·</span>
-                <span className="font-medium truncate max-w-[260px]" title={selectedScan.name}>{t("history.scanSelected", { name: selectedScan.name })}</span>
-                <button onClick={() => setSelectedScan(null)} className="text-primary hover:underline text-xs">
-                  {t("history.allScansOfDay")}
-                </button>
-              </>
-            )}
-            {isPeriodLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-          </div>
-          <button
-            onClick={() => { setSelectedScan(null); setZoneFilter(null); setSelectedDay(null); }}
-            className="text-sm text-primary hover:underline font-medium"
-          >
-            {t("history.backToNow")}
-          </button>
-        </div>
-      )}
-
       {/* 5 Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="bg-surface border border-border rounded-xl p-5 shadow-sm">
@@ -371,7 +346,27 @@ export default function DashboardPage() {
       {/* Scans of the day picked on the chart (the "Dernier scan" card above never changes) */}
       {selectedDay && (
             <div className="bg-surface border border-border rounded-xl p-5 flex flex-col">
-              <h3 className="text-sm font-semibold mb-1 uppercase">{t("history.scansOf", { date: selectedDay.name })}</h3>
+              {/* The way back (formerly a banner above the counters) lives in this card's header */}
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                <h3 className="text-sm font-semibold uppercase flex items-center gap-2">
+                  <History className="w-4 h-4 text-primary" />
+                  {t("history.scansOf", { date: selectedDay.name })}
+                  {isPeriodLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                </h3>
+                <div className="flex items-center gap-4 text-xs">
+                  {selectedScan && (
+                    <button onClick={() => setSelectedScan(null)} className="text-primary hover:underline">
+                      {t("history.allScansOfDay")}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setSelectedScan(null); setZoneFilter(null); setSelectedDay(null); }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    {t("history.backToNow")}
+                  </button>
+                </div>
+              </div>
               <p className="text-[11px] text-text-muted mb-4">{t("history.pickScan")}</p>
               {zones.length > 1 && (
                 <div className="flex flex-wrap gap-2 mb-4">
