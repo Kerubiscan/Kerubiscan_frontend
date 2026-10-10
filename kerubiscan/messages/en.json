@@ -94,6 +94,7 @@
       "statusFailed": "FAILED"
     },
     "assets": {
+      "scanOneCompany": "Select assets of a single company: a scan and its report belong to one company.",
       "title": "Assets",
       "description": "Inventory of your IT infrastructure.",
       "addAssetButton": "Add Asset",
