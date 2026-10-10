@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { XCircle, AlertTriangle, Shield, Info, Calendar, Loader2, Layers } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { XCircle, AlertTriangle, Shield, Info, Calendar, Loader2, Layers, History, MapPin } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from "recharts";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { fetchApi } from "@/lib/api";
@@ -18,45 +18,73 @@ export default function DashboardPage() {
   const [latestScan, setLatestScan] = useState<any>(null);
   const [vulnerabilities, setVulnerabilities] = useState<any[]>([]);
   const [scheduledScans, setScheduledScans] = useState<any[]>([]);
+  // A day picked on the over-time chart: the whole dashboard then shows that day (null: today's view)
+  const [selectedDay, setSelectedDay] = useState<{ date: string; name: string } | null>(null);
+  const [dayScans, setDayScans] = useState<any[]>([]);
+  const [zoneFilter, setZoneFilter] = useState<string | null>(null);
+  const [isPeriodLoading, setIsPeriodLoading] = useState(false);
 
+  // Data that does not depend on the selected day
   useEffect(() => {
-    async function loadDashboardData() {
+    async function loadStaticData() {
       try {
-        setIsLoading(true);
-        const [
-          kpisData,
-          pieChartData,
-          lineChartData,
-          osChartData,
-          latestScanData,
-          recentVulnsData,
-          scheduledScansData
-        ] = await Promise.all([
-          fetchApi<any>("/dashboard/kpis"),
-          fetchApi<any[]>("/dashboard/charts/distribution"),
+        const [lineChartData, osChartData, scheduledScansData] = await Promise.all([
           fetchApi<any[]>("/dashboard/charts/over-time"),
           fetchApi<any[]>("/dashboard/assets-os"),
-          fetchApi<any>("/dashboard/latest-scan"),
-          fetchApi<any[]>("/dashboard/recent-vulnerabilities"),
           fetchApi<any[]>("/dashboard/scheduled-scans")
         ]);
-
-        setKpis(kpisData);
-        setPieData(pieChartData);
         setLineData(lineChartData);
         setOsData(osChartData);
-        setLatestScan(latestScanData);
-        setVulnerabilities(recentVulnsData);
         setScheduledScans(scheduledScansData);
       } catch (error) {
         console.error("Failed to load dashboard data", error);
+      }
+    }
+    loadStaticData();
+  }, []);
+
+  // Counters, distribution, findings and scans: of the selected day, or the current ones
+  useEffect(() => {
+    async function loadPeriodData() {
+      const query = selectedDay ? `?date=${selectedDay.date}` : "";
+      try {
+        setIsPeriodLoading(true);
+        const [kpisData, pieChartData, recentVulnsData, scanData] = await Promise.all([
+          fetchApi<any>(`/dashboard/kpis${query}`),
+          fetchApi<any[]>(`/dashboard/charts/distribution${query}`),
+          fetchApi<any[]>(`/dashboard/recent-vulnerabilities${query}`),
+          selectedDay
+            ? fetchApi<any[]>(`/dashboard/scans-of-day?date=${selectedDay.date}`)
+            : fetchApi<any>("/dashboard/latest-scan")
+        ]);
+        setKpis(kpisData);
+        setPieData(pieChartData);
+        setVulnerabilities(recentVulnsData);
+        if (selectedDay) {
+          setDayScans(scanData || []);
+        } else {
+          setLatestScan(scanData);
+        }
+        setZoneFilter(null);
+      } catch (error) {
+        console.error("Failed to load dashboard data", error);
       } finally {
+        setIsPeriodLoading(false);
         setIsLoading(false);
       }
     }
+    loadPeriodData();
+  }, [selectedDay]);
 
-    loadDashboardData();
-  }, []);
+  // Click on the over-time chart: show that day (a second click on the same day goes back to today)
+  const handleChartClick = (state: any) => {
+    const point = state?.activePayload?.[0]?.payload;
+    if (!point?.date) return;
+    setSelectedDay((current) => (current?.date === point.date ? null : { date: point.date, name: point.name }));
+  };
+
+  const zones: string[] = Array.from(new Set(dayScans.map((s) => s.zone || t("history.noZone"))));
+  const visibleDayScans = dayScans.filter((s) => !zoneFilter || (s.zone || t("history.noZone")) === zoneFilter);
 
   const formatLabel = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
@@ -73,6 +101,22 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-6">
+
+      {selectedDay && (
+        <div className="flex items-center justify-between gap-4 bg-primary/10 border border-primary/30 rounded-xl px-5 py-3">
+          <div className="flex items-center gap-3 text-sm">
+            <History className="w-4 h-4 text-primary" />
+            <span className="font-medium">{t("history.viewing", { date: selectedDay.name })}</span>
+            {isPeriodLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+          </div>
+          <button
+            onClick={() => setSelectedDay(null)}
+            className="text-sm text-primary hover:underline font-medium"
+          >
+            {t("history.backToNow")}
+          </button>
+        </div>
+      )}
 
       {/* 5 Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
@@ -191,6 +235,7 @@ export default function DashboardPage() {
           <div className="bg-surface border border-border rounded-xl p-5 flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-sm font-semibold uppercase">{t("charts.overTime")}</h3>
+              <span className="text-[10px] text-text-muted">{t("history.hint")}</span>
             </div>
             <div className="flex flex-wrap gap-3 text-[10px] mb-4">
               <div className="flex items-center gap-1.5"><div className="w-2 h-1 bg-status-critical"></div><span className="text-text-muted">{formatLabel(t("stats.critical"))}</span></div>
@@ -201,7 +246,8 @@ export default function DashboardPage() {
             </div>
             <div className="flex-1 w-full min-h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={lineData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                <LineChart data={lineData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }} onClick={handleChartClick} style={{ cursor: "pointer" }}>
+                  {selectedDay && <ReferenceLine x={selectedDay.name} stroke="var(--primary)" strokeDasharray="4 4" />}
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} dy={10} />
                   <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
@@ -220,6 +266,56 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6">
+          {selectedDay ? (
+          <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
+            <h3 className="text-sm font-semibold mb-4 uppercase">{t("history.scansOf", { date: selectedDay.name })}</h3>
+            {zones.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  onClick={() => setZoneFilter(null)}
+                  className={`px-2 py-0.5 rounded-full text-xs border ${!zoneFilter ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
+                >
+                  {t("history.allZones")}
+                </button>
+                {zones.map((zone) => (
+                  <button
+                    key={zone}
+                    onClick={() => setZoneFilter(zone)}
+                    className={`px-2 py-0.5 rounded-full text-xs border ${zoneFilter === zone ? "bg-primary/20 border-primary/40 text-primary" : "border-border text-text-muted"}`}
+                  >
+                    {zone}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="space-y-3 overflow-y-auto max-h-[280px] pr-1 mb-4">
+              {visibleDayScans.length === 0 && (
+                <p className="text-sm text-text-muted">{t("history.noScans")}</p>
+              )}
+              {visibleDayScans.map((scan) => (
+                <div key={scan.id} className="border border-border/60 rounded-lg p-3 text-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="font-medium truncate" title={scan.name}>{scan.name}</span>
+                    <span className="text-text-muted tabular-nums shrink-0">{scan.time}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-text-muted mt-1">
+                    <MapPin className="w-3 h-3" />
+                    <span className="truncate">{scan.zone || t("history.noZone")}</span>
+                    <span>·</span>
+                    <span>{scan.engine}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 text-xs">
+                    <span className="px-2 py-0.5 bg-status-info/20 text-status-info rounded-md font-medium border border-status-info/30">{scan.status}</span>
+                    <span className="text-text-muted">{t("history.vulnerabilitiesCount", { count: scan.vulnerabilities })}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link href="/dashboard/reports" className="w-full py-2 bg-transparent border border-primary/30 text-primary hover:bg-primary/10 rounded-lg text-sm transition-colors font-medium mt-auto text-center block">
+              {t("latestScan.viewReport")}
+            </Link>
+          </div>
+          ) : (
           <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col justify-center">
             <h3 className="text-sm font-semibold mb-6 uppercase">{t("latestScan.title")}</h3>
             <div className="space-y-4 text-sm mb-6">
@@ -254,6 +350,10 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex justify-between">
+                <span className="text-text-muted">{t("latestScan.zone")}</span>
+                <span className="font-medium text-right truncate max-w-[180px]" title={latestScan?.zone || ""}>{latestScan?.zone || "-"}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-text-muted">{t("latestScan.date")}</span>
                 <span className="font-medium text-right">{latestScan?.date}</span>
               </div>
@@ -270,6 +370,7 @@ export default function DashboardPage() {
               {t("latestScan.viewReport")}
             </Link>
           </div>
+          )}
 
           <div className="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col">
             <h3 className="text-sm font-semibold mb-6 uppercase shrink-0">{t("assets.title")}</h3>
@@ -295,7 +396,9 @@ export default function DashboardPage() {
       {/* Bottom Row: Table + Scheduled Scans */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-5 flex flex-col">
-          <h3 className="text-sm font-semibold mb-6 uppercase">{t("vulnerabilities.title")}</h3>
+          <h3 className="text-sm font-semibold mb-6 uppercase">
+            {selectedDay ? t("history.findingsOf", { date: selectedDay.name }) : t("vulnerabilities.title")}
+          </h3>
 
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-sm text-left">
