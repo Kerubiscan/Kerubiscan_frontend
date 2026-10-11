@@ -10,6 +10,7 @@ import { Play, Pause, Square, ChevronDown, Edit, Trash2, RotateCw, Eye, Layers }
 import { NewScanModal } from "@/components/scans/NewScanModal";
 import { EditScanModal } from "@/components/scans/EditScanModal";
 import { ViewScanModal } from "@/components/scans/ViewScanModal";
+import { depthLabel } from "@/components/scans/ScanDepthPicker";
 import { useSession } from "next-auth/react";
 import { canModify } from "@/lib/roles";
 import { fetchApi } from "@/lib/api";
@@ -35,6 +36,7 @@ interface Scan {
   duration_seconds?: number | null;
   eta_seconds?: number | null;
   eta_basis?: string | null;
+  scan_depth?: string | null;
 }
 
 const ACTIVE_STATUSES = ["PENDING", "IN_PROGRESS", "PAUSED"];
@@ -264,7 +266,16 @@ export default function ScansPage() {
         return row.target;
       }
     },
-    { header: t("typeCol"), accessor: "scan_type" as const },
+    {
+      header: t("typeCol"),
+      // The duration is shown only when it is not the usual one
+      accessor: (row: Scan) => !row.scan_depth || row.scan_depth === "STANDARD" ? row.scan_type : (
+        <span>
+          {row.scan_type}
+          <span className="block text-xs text-text-muted">{depthLabel(row.scan_depth)}</span>
+        </span>
+      )
+    },
     {
       header: t("dateTimeCol"),
       accessor: (row: any) => {

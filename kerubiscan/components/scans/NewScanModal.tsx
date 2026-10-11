@@ -3,6 +3,7 @@ import { X, ChevronDown, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import { fetchApi } from "@/lib/api";
+import { ScanDepthPicker } from "./ScanDepthPicker";
 
 interface NewScanModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
   const [target, setTarget] = useState("");
   const [networkZone, setNetworkZone] = useState("");
   const [scannerEngine, setScannerEngine] = useState("NMAP");
+  const [scanDepth, setScanDepth] = useState("STANDARD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
@@ -69,6 +71,7 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
           target: target,
           network_zone: networkZone || null,
           scanner_engine: scannerEngine,
+          scan_depth: scanType === "DISCOVERY" ? null : scanDepth,
           scheduled_for: null,
           recurrence_rule: null,
         }),
@@ -275,6 +278,9 @@ export function NewScanModal({ isOpen, onClose, onSuccess }: NewScanModalProps) 
               )}
             </div>
           </div>
+          {scanType !== "DISCOVERY" && (
+            <ScanDepthPicker value={scanDepth} onChange={setScanDepth} engine={scannerEngine} />
+          )}
           <div className="pt-4 flex justify-end gap-3">
             <button 
               type="button" 
