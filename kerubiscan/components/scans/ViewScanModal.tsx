@@ -1,5 +1,6 @@
 import React from "react";
-import { X, Calendar, Server, Shield, Activity, Fingerprint } from "lucide-react";
+import { X, Calendar, Server, Shield, Activity, Fingerprint, Timer } from "lucide-react";
+import { depthLabel } from "./ScanDepthPicker";
 
 interface Scan {
   id: string;
@@ -10,6 +11,7 @@ interface Scan {
   status: string;
   network_zone: string | null;
   scanner_engine: string;
+  scan_depth?: string | null;
   target_states?: Record<string, string>;
   // Reason and timestamps per target, recorded by the backend (failure, timeout, OpenVAS queue...)
   target_details?: Record<string, { detail?: string; started_at?: string; updated_at?: string }> | null;
@@ -93,6 +95,15 @@ export function ViewScanModal({ isOpen, onClose, scan, companies = [] }: ViewSca
               </span>
               <span className="text-sm font-medium text-text-main">{scan.scanner_engine}</span>
             </div>
+
+            {scan.scan_type !== "DISCOVERY" && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-text-muted flex items-center gap-2">
+                  <Timer className="w-4 h-4 text-primary" /> Durée du scan
+                </span>
+                <span className="text-sm font-medium text-text-main">{depthLabel(scan.scan_depth)}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <span className="text-sm text-text-muted flex items-center gap-2">

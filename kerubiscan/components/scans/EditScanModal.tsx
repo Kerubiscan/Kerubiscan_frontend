@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { ScanDepthPicker } from "./ScanDepthPicker";
 
 interface Scan {
   id: string;
@@ -10,6 +11,7 @@ interface Scan {
   network_zone: string | null;
   scanner_engine: string;
   scan_type: string;
+  scan_depth?: string | null;
   status: string;
   progress: number;
 }
@@ -27,6 +29,7 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
   const [target, setTarget] = useState("");
   const [networkZone, setNetworkZone] = useState("");
   const [scannerEngine, setScannerEngine] = useState("OPENVAS");
+  const [scanDepth, setScanDepth] = useState("STANDARD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isScannerDropdownOpen, setIsScannerDropdownOpen] = useState(false);
@@ -34,7 +37,8 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
   const scannerOptions = [
     { value: "OPENVAS", label: "OpenVAS" },
     { value: "NMAP", label: "Nmap" },
-    { value: "NUCLEI", label: "Nuclei" }
+    { value: "NUCLEI", label: "Nuclei" },
+    { value: "OWASP_ZAP", label: "OWASP ZAP" }
   ];
 
   useEffect(() => {
@@ -43,6 +47,7 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
       setTarget(scan.target || "");
       setNetworkZone(scan.network_zone || "");
       setScannerEngine(scan.scanner_engine || "OPENVAS");
+      setScanDepth(scan.scan_depth || "STANDARD");
       setError("");
     }
   }, [scan]);
@@ -69,6 +74,7 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
           target: target,
           network_zone: networkZone || null,
           scanner_engine: scannerEngine,
+          ...(scan.scan_type === "DISCOVERY" ? {} : { scan_depth: scanDepth }),
         }),
       });
 
@@ -171,6 +177,10 @@ export function EditScanModal({ isOpen, onClose, onSuccess, scan }: EditScanModa
               )}
             </div>
           </div>
+
+          {scan.scan_type !== "DISCOVERY" && (
+            <ScanDepthPicker value={scanDepth} onChange={setScanDepth} engine={scannerEngine} />
+          )}
 
           <div className="pt-4 flex justify-end gap-3">
             <button 
