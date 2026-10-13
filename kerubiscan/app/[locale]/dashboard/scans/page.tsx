@@ -356,6 +356,15 @@ export default function ScansPage() {
             </div>
           );
         }
+        if (row.status === "PAUSED" && row.duration_seconds !== null && row.duration_seconds !== undefined) {
+          // Frozen at the pause (the server stops the clock there): no tick, no estimate
+          return (
+            <div className="flex flex-col">
+              <span className="text-xs text-text-muted tabular-nums">{formatClock(row.duration_seconds)} {t("elapsed")}</span>
+              <span className="text-xs text-text-muted">{t("pausedClock")}</span>
+            </div>
+          );
+        }
         return "-";
       }
     },
