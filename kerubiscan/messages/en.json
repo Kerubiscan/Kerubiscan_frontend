@@ -81,6 +81,7 @@
       "elapsed": "elapsed",
       "remaining": "remaining (estimate)",
       "endImminent": "ending soon",
+      "pausedClock": "paused",
       "estimating": "estimating",
       "rerunConfirm": "Rerun this scan? It restarts on the same row; findings already found are kept and updated.",
       "stop": "Stop scan",
