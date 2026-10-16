@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePathname } from "@/i18n/routing";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
@@ -14,10 +14,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   // The menu button opens the sidebar; a second click folds it back to the left.
   // Wide screens: it takes its place beside the page, which moves to the right.
   // Small screens (no room to push): it slides over the page and closes after a choice,
-  // a click outside it or Escape.
+  // a click outside it or Escape. On every screen, a click beside the open sidebar folds it.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const pathname = usePathname();
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const query = window.matchMedia(DESKTOP_QUERY);
@@ -46,6 +47,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [sidebarOpen, isDesktop]);
 
+  // A click anywhere beside the open sidebar folds it (it used to stay open on wide screens)
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setSidebarOpen(false);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, "0");
+        } catch {
+          // not remembered: no harm
+        }
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [sidebarOpen]);
+
   const toggleSidebar = () => {
     setSidebarOpen((open) => {
       const next = !open;
@@ -65,6 +83,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* One sidebar for both layouts: fixed drawer on small screens, column of the page on wide
           ones (its width goes from 0 to 16rem, so the dashboard slides right or back left) */}
       <div
+        ref={sidebarRef}
         className={`fixed inset-y-0 left-0 z-40 lg:static lg:z-auto shrink-0 overflow-hidden transition-all duration-300 ease-out ${
           sidebarOpen
             ? "translate-x-0 shadow-2xl lg:shadow-none lg:w-64"
