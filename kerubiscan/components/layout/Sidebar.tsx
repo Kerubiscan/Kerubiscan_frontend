@@ -23,6 +23,9 @@ import { canViewAuditsAndUsers } from "@/lib/roles";
 
 import { fetchApi } from "@/lib/api";
 
+// The scanner status follows the scans as they start and end, without reloading the page
+const STATUS_REFRESH_MS = 15000;
+
 export function Sidebar({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations("Navigation");
   const tScanner = useTranslations("Scanner");
@@ -32,6 +35,7 @@ export function Sidebar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [scannerStatus, setScannerStatus] = React.useState({
     status: tScanner("operational") || "Opérationnel",
     scans_in_progress: 0,
+    scans_completed: 0,
     scheduled_scans: 0,
     last_scan_time: "-"
   });
@@ -44,6 +48,7 @@ export function Sidebar({ onMenuClick }: { onMenuClick?: () => void }) {
           setScannerStatus({
             status: data.status || tScanner("operational"),
             scans_in_progress: data.scans_in_progress || 0,
+            scans_completed: data.scans_completed || 0,
             scheduled_scans: data.scheduled_scans || 0,
             last_scan_time: data.last_scan_time || "-"
           });
@@ -53,6 +58,18 @@ export function Sidebar({ onMenuClick }: { onMenuClick?: () => void }) {
       }
     }
     fetchStatus();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchStatus();
+    }, STATUS_REFRESH_MS);
+    // Back on the tab: up to date at once rather than at the next tick
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchStatus();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   const menuItems = [
@@ -125,6 +142,10 @@ export function Sidebar({ onMenuClick }: { onMenuClick?: () => void }) {
             <div className="flex justify-between items-center">
               <span className="text-text-muted">{tScanner("scansInProgress")}</span>
               <span className="font-semibold text-white">{scannerStatus.scans_in_progress}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-text-muted">{tScanner("scansCompleted")}</span>
+              <span className="font-semibold text-white">{scannerStatus.scans_completed}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-text-muted">{tScanner("scheduledScans")}</span>

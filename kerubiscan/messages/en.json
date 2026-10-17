@@ -16,6 +16,7 @@
     "statusTitle": "SCANNER STATUS",
     "operational": "Operational",
     "scansInProgress": "Scans in progress",
+    "scansCompleted": "Completed scans",
     "scheduledScans": "Scheduled scans",
     "lastScan": "Last scan",
     "ago15m": "15 min ago"
